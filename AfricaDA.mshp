@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SAGA_METADATA>
+  <DATABASE>
+    <FIELDS>
+      <FIELD TYPE="STRING">ID</FIELD>
+      <FIELD TYPE="STRING">CODE</FIELD>
+      <FIELD TYPE="STRING">COUNTRY</FIELD>
+    </FIELDS>
+  </DATABASE>
+  <SOURCE></SOURCE>
+  <HISTORY></HISTORY>
+  <FILE>C:\Users\jnune\Documents\AfricanDroughtAtlas\Africa.shp</FILE>
+  <DESCRIPTION></DESCRIPTION>
+</SAGA_METADATA>
