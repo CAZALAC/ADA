@@ -2,6 +2,31 @@
 #Based on CRU: 02/08/2018
 #THIS TRY IS WITH REG ADAPT WITHOUT MODIFIERS
 
+#####
+#import Libraries
+library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
+library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(corrplot);library(sqldf)
+library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para mantener orden texto-numero en id_station
+library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
+library(maptools);library(stringr);library(raster);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
+library(RSAGA);library(gtools)
+
+#####
+#config
+workdir = "C:/Users/HMC/Documents/Cazalac/Proyectos_Ejec/Unesco_ADA/"
+country="UGA" #PLEASE REPLACE WITH CORRESPONDING THREE ISO LETTER . IN THIS CASE BOTZWANA=BWA
+#THREE LETTER CODES CAN BE FOUND IN "CountryISOCodes.csv"
+
+#####
+#Function
+source('DroughAtlasFunctions.R')
+
+#####
+#Check
+rsaga.env()
+rsaga.get.version()
+
+
 ###################################################################################################################
 #                                    BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 or CHIRPS                     #
 #                                    CHOOSE ONE OF THE TWO ALTERNATIVES BASED ON COUNTRY SIZE                     #
@@ -12,16 +37,10 @@
 ##################################################################################################################
 #                                         BLOCK II. VARIABLES AND INDICES  CALCULATION                           #
 ##################################################################################################################
-library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
-library (plyr);library(latticeExtra);library(reshape2);library(gdata)
-#library(corrplot)
 
-country="UGA" #PLEASE REPLACE WITH CORRESPONDING THREE ISO LETTER . IN THIS CASE BOTZWANA=BWA
-#THREE LETTER CODES CAN BE FOUND IN "CountryISOCodes.csv"
 
-setwd(paste0("C:/Users/HMC/Documents/Cazalac/Proyectos_Ejec/Unesco_ADA/", country)) #changed slashes
+setwd(paste0(workdir, country)) #changed slashes
 getwd()
-
 Boundaries=readOGR(".",country) #Obtained from http://www.maplibrary.org/library/stacks/Africa/index.htm
 projection(Boundaries)="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
 plot(Boundaries)
@@ -50,7 +69,6 @@ RegionDF[,1] <- factor(RegionDF[,1]) #Defino solamente los niveles del DF, ya qu
 #Almacenamiento de Estaciones pertenecientes a la region, en una lista
 #(Paso Necesario, ya que se cambiara el formato a Long)
 #---------------------------------------------------------------------
-library(gtools)# Para mantener orden texto-numero en id_station
 
 EstacionesWide <- list()
 #levels(reorder(RegionDF[,1]))
@@ -62,7 +80,6 @@ for (i in mixedsort(levels(RegionDF[,1]))){
 
 #Almacenamiento de Estaciones en formato Long y en formato necesario para c?lculo de H1
 #--------------------------------------------------------------------------------------
-library(reshape2)
 EstacionesLong <- list()
 #DatosH1 <- list()
 
@@ -199,7 +216,6 @@ UltimoAnio_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$Year,BaseDatosInte
 
 
 # C.5.5. Add indices to Stations DataBase and remove objects from memory
-library(plyr)
 id_station<-levels(BaseDatosIntermedia$id_station)
 BaseDatosIndices<-data.frame(id_station=id_station,MAP=PMA_por_Estacion, SI_Medio=SI_por_Estacion,
                              JMD_Medio=JMD_por_Estacion, IFM_Medio=IFM_por_Estacion, RL_Station=LR_por_Estacion, FirstYear=PrimerAnio_por_Estacion,
@@ -219,12 +235,7 @@ View(BaseDatosEstaciones)
 
 #...................................................................................................................
 #                                     Trend, serial correlation, Mann-Kendall and Sen slope calculation
-library(sqldf)
-library(zoo)
-library(Kendall)
-library(zyp)
-library(car)
-library(plyr)
+
 RegionTotalS<-sqldf(paste("SELECT id_station, Year, CumSumDec FROM BaseDatosEstaciones join BaseDatosIntermedia USING(id_station)",sep=""))
 #RegionTotalS<-sqldf("select id_station, Year, JanDec from BaseCompleta where RL_Station>=15")
 RegionTotalS_dat<-RegionTotalS[c("CumSumDec","Year")][,]
@@ -311,13 +322,7 @@ View(BaseDatosEstaciones) #Hasta el final del Block II, el script se ejecuta de 
 ###############################################################################################################
 #                           BLOCK III. REGIONALIZATION USING MINIMUM DISTANCE SEARCHING  ALGORITHM            #
 ###############################################################################################################
-library(rgeos)
-library(sqldf)
-library(lmom)
-library(lmomRFA)
-library(sp)
-library(rrcov)
-library(nsRFA)
+
 # Minimum Distance Searching Algorithm
 
 BaseCompletaAdapt=merge(BaseDatosEstaciones,BaseRegistrosPr, by.x = "id_station", by.y = "id_station") # Ac? uno la Base de Datos de Estaciones con Indices Medios y  la Base de Datos de Registros
@@ -397,7 +402,6 @@ RegStations$id_station=as.factor(RegStations$id_station)
 RegStations$ClustReg_adapt=as.integer(RegStations$ClustReg_adapt)
 pie(table(RegStations$Criteria))
 
-library(plyr)
 BaseDatosEstacionesClust=join(BaseDatosEstaciones,RegStations,by="id_station")
 write.csv(BaseDatosEstacionesClust,"BaseDatosEstacionesClust.csv",row.names=FALSE)
 rm(BaseDatosEstacionesClust)
@@ -470,7 +474,6 @@ ClustLevels=length(levels(as.factor(BaseDatosEstacionesClust$ClustReg_adapt)))
 #                                           BLOCK V: L-MOMENTS BASED REGIONAL FREQUENCY ANALYSIS                #
 #################################################################################################################
 
-library(lmomRFA);library(lmom);library(sqldf);library(nsRFA);library(rrcov)
 # E.1. Create homogeneous regions
 #Incluir linea con ifelse que evalue la dimension de NombresCluster y asigne MaxClusters
 #VarInter="CumSumDec"
@@ -674,7 +677,6 @@ write.csv(ResumeTable,"ResumeTable.csv",row.names=FALSE)
 ##################################################################################################################
 #                                           BLOCK VI: FREQUENCY/QUANTIL/RETURN PERIOD ESTIMATION                 #
 ##################################################################################################################
-library(lmom); library(lmomRFA);library(nsRFA); library(plyr); library(gtools)
 # These are the L-moments of the Variable of Interest (not necessarily annual precipitation)
 #These are the L-moments of the non zero records
 lmom.df=data.frame(BaseSummaryStatistics[[1]][,,1])
@@ -844,14 +846,6 @@ View(BaseModelMapCor)
 #                                BLOCK VII: FREQUENCY/RETURN PERIOD/QUANTIL MAPPING                    #
 ########################################################################################################
 
-
-library(ModelMap); library(maptools);library(raster);library(stringr);library(raster) 
-library(rasterVis);library(hydroGOF);library(randomForest); library(progress)
-
-#Check proper installation of SAG-GIS and RSAGA
-library(RSAGA)
-rsaga.env()
-rsaga.get.version()
 # Prepare Thiessen polygons mask shapefile and plotting
 
 # Calculo Periodo de Retorno m?ximo posible de calcular 5t- rule Jakob et al, 1999
@@ -1036,7 +1030,6 @@ write.csv(VarImpmeasure,"VarImpmeasure.csv", row.names=TRUE)
 
 
 # ..................................Return Period maps for a given proportion of mean precipitation
-library(ModelMap); library(hydroGOF);library(raster)
 
 CalGOFDBRP=list()
 ValidGOFDBRP=list()
