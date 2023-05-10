@@ -1,2 +1,3 @@
-# ADA
+# African Drought Atlas
+
  AfricanDroughtAtlas
