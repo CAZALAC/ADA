@@ -358,8 +358,9 @@ RegStations=data.frame(id_station=NA,ClustReg_adapt=NA,Criteria=NA)
 counter=1
 Skips=3
 MaxRS=21 #Maximum number of stations per region allowed
-#cuando d_adapt[1,] es 0, genera un error de dimensiones, por lo que se setea a max 1
-while(length(d_adapt[1,])>=1) {#Acá aparece el error de library "homtest": Solucionado
+
+#cuando d_adapt[1,] es 0, genera un error de dimensiones, por lo que se rompe el ciclo abajo
+while(length(d_adapt[1,])>0) {#Acá aparece el error de library "homtest": Solucionado
   REG_adapt=list()# Almacena el nombre de las estaciones disponibles en cada iteracion
   BaseReg_adapt=list()#Almacena los registros de las estaciones para calcular H1
   H1s=0
@@ -406,6 +407,9 @@ while(length(d_adapt[1,])>=1) {#Acá aparece el error de library "homtest": Solu
   d_adapt=d_adapt[-grep(paste0(RSt,"$",collapse="|"),row.names(d_adapt)),-grep(paste0(RSt,"$",collapse="|"),colnames(d_adapt))]# Secreto es adicionar signo $
   counter=sum(counter,1)
   
+  if(is.null(dim(d_adapt))){
+    break
+  }
 } #Al parecer, el error puede bypasearse, dado que el enfoque de while no está bien implementado.
 #
 RegStations=(RegStations[-1,])#CAZ: Perfecto, ya que primera fila es NA
@@ -944,14 +948,14 @@ points(coords,col="red")
 #Rasterbrick creation with the maps of all predictors
 raster_list<-Predictor   
 rast.list<-list()
-temp.r.l=raster(paste0("C:/Users/HMC/Documents/Cazalac/Proyectos_Ejec/Unesco_ADA/ADAFolderPredictors/",raster_list[1],".img"))
+temp.r.l=raster(paste0("../../ADAFolderPredictors/",raster_list[1],".img"))
 temp.r.l=crop(temp.r.l,polygons(Boundaries))
 temp.r.l<-mask(temp.r.l,polygons(Boundaries))
 plot(temp.r.l,main="P1")
 rast.list[[1]]=temp.r.l
 Prtrs[,1]=extract(temp.r.l, coords, method='bilinear')
 for(l in 2:length(raster_list)){
-  country.raster<-raster(paste0("C:/Users/HMC/Documents/Cazalac/Proyectos_Ejec/Unesco_ADA/ADAFolderPredictors/",raster_list[l],".img"))
+  country.raster<-raster(paste0("../../ADAFolderPredictors/",raster_list[l],".img"))
   country.raster<-crop(country.raster,polygons(Boundaries))
   country.raster<-mask(country.raster,polygons(Boundaries))
     if(compareRaster(country.raster,temp.r.l)==TRUE){
