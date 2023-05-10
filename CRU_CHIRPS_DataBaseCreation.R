@@ -30,7 +30,7 @@ library(gdata)
 
 # Config =================
 workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
-
+COUTRYNUM = 19
 # Setup, Country Code, Shape and raster creation =================
 
 setwd(workdir)
@@ -87,7 +87,7 @@ plot(mean(pre.anual@raster))
 
 # DataBase creation for a given country -------------------------
 
-country=Afr.country.list[15]
+country=Afr.country.list[COUTRYNUM]
 
 #Create working directory and set working directory for a given country
 dir.create(paste0(getwd(),"/",country))# Only the first time and if it has not been created
@@ -172,7 +172,7 @@ library(rgdal);library(sp);library(raster)
 
 # config ===========
 workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
-
+COUTRYNUM = 19
 # Setup, Country Code, Shape and raster creation ========
 setwd(workdir)
 # Listado de paises segun codigo ISO
@@ -185,7 +185,7 @@ randomSample = function(df,n) {
   return (df[sample(nrow(df), n),])}
 
 # Seleccion del pais de trabajo
-country=Afr.country.list[58]
+country=Afr.country.list[COUTRYNUM]
 
 #Create working directory and set working directory
 dir.create(paste0(workdir,country))
