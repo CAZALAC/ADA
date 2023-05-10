@@ -94,15 +94,15 @@ dir.create(paste0(getwd(),"/",country))# Only the first time and if it has not b
 setwd(paste0(getwd(),"/",country))
 
 #Define extent and margin. Deprecated. Not use.
-#Boundaries=getData('GADM', country=country, level=1)
-#writeOGR(Boundaries, dsn = '.', layer = country, driver = "ESRI Shapefile",overwrite_layer=TRUE)
+Boundaries=raster::getData('GADM', country=country, level=1)
+writeOGR(Boundaries, dsn = '.', layer = country, driver = "ESRI Shapefile",overwrite_layer=TRUE)
 #plot(Boundaries)
 #rm(Boundaries)
 #.....................
 # manual correction of country's shapefile in SAGA GIS and then save it to the folder
 #.....................
 
-Boundaries=readOGR(".",country) #Obtained from http://www.maplibrary.org/library/stacks/Africa/index.htm
+#Boundaries=readOGR(".",country) #Obtained from http://www.maplibrary.org/library/stacks/Africa/index.htm
 plot(Boundaries)
 
 #Stations Database Generacion (BaseDatosEstaciones) for a given country
@@ -163,7 +163,7 @@ write.csv(BaseDatosRegistros,"BaseDatosRegistrosBackup.csv",row.names = FALSE)
 # BLOCK I.B. DATABASE CONSTRUCTION FROM CHIRPS ------------------
 #AFRICAN DROUGHT ATLAS CHIRPS
 
-# libreries ========
+# libraries ========
 library(raster)
 library(countrycode)
 library(rgdal)
@@ -194,16 +194,15 @@ setwd(paste0(getwd(),"/",country))
 
 
 #Define extent and margin. Deprecated. Not use.
-#Boundaries=getData('GADM', country=country, level=1)
-#writeOGR(Boundaries, dsn = '.', layer = country, driver = "ESRI Shapefile",overwrite_layer=TRUE)
-#plot(Boundaries)
+Boundaries=raster::getData('GADM', country=country, level=1)
+writeOGR(Boundaries, dsn = '.', layer = country, driver = "ESRI Shapefile",overwrite_layer=TRUE)
 #rm(Boundaries)
 #save.image(paste0("C:/Users/jnune/Documents/AtlasSequiaALCCRU/",country,"/",country,".RData"))
 ##                CORREGIR MAPA MANUALMENTE
 #.......................................................................
 
 
-Boundaries=readOGR(".",country)   #Obtenido de http://www.maplibrary.org/library/stacks/Africa/index.htm
+#Boundaries=readOGR(".",country)   #Obtenido de http://www.maplibrary.org/library/stacks/Africa/index.htm
 plot(Boundaries)
 Bound.Pol=extent(Boundaries)
 if(Bound.Pol[1]>0) xmin=Bound.Pol[1]*0.95 else xmin=Bound.Pol[1]*1.05
