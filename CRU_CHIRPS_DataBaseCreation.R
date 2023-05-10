@@ -1,10 +1,21 @@
-#AfricanDroughtAtlas Functions to create Stations and Records DataBases from CRU and CHIRPS
-#                                             
+##################################################
+## -------------------------------------------------
+## Project: AfricanDroughtAtlas
+## Script purpose: Functions to create Stations and Records DataBases from CRU and CHIRPS
+## Date Created: 09-05-2023
+## Author 1: J. Nuñez
+## Author 2: H. Maureria
+## Author 3: P. Rojas
+## Email: hmaureria@cazalac.org
+## -------------------------------------------------
+## Notes: -Crear funcion que try catch para descarga de iridl
+##      : -Crear tercer script solo con 
+##################################################
 
-###################################################################################################################
-#                                    BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21                               #
-#http://data.ceda.ac.uk/badc/cru/data/cru_ts/cru_ts_3.21/data/pre/cru_ts3.21.1921.1930.pre.dat.gz                 #
-###################################################################################################################
+
+# BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
+# data from: http://data.ceda.ac.uk/badc/cru/data/cru_ts/cru_ts_3.21/data/pre/cru_ts3.21.1921.1930.pre.dat.gz                 #
+
 library(raster)
 library(countrycode)
 library(rts)
@@ -14,23 +25,23 @@ library(HelpersMG)
 library(countrycode)
 library (plyr)
 library(latticeExtra)
-#library(corrplot)
 library(reshape2)
 library(gdata)
 
-setwd("C:/Users/jnune/Documents/ADAFolder")
+# Config =================
+workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
+
+# Setup, Country Code, Shape and raster creation =================
+
+setwd(workdir)
 # Listado de paises seg?n codigo ISO
 ISO.codes=read.csv("CountryISOCodes.csv",sep=";")
 Afr.country.list=as.character(ISO.codes$ThreeLetter)
 Afr.country.name=countrycode(Afr.country.list, "iso3c","country.name")
-
-BoundariesAFR=readOGR("AfricaDA.shp") #Obtenido de http://www.maplibrary.org/library/stacks/Africa/index.htm
+BoundariesAFR=readOGR("AfricaDA.shp") #from http://www.maplibrary.org/library/stacks/Africa/index.htm
 projection(BoundariesAFR)="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
 
-#.................................................................................................................
-
-
-#open CRU nc file
+# Open CRU nc file --------------------
 nc <- nc_open("cru_ts3.24.01.1901.2015.pre.dat.nc")
 print(nc)
 
@@ -74,15 +85,13 @@ plot(mean(pre.anual@raster))
 #pre.anual.2=crop(pre.anual.2,polygons(Boundaries))
 
 
-#....................................................................................................................
-#                                                  DataBase creation for a given country         
+# DataBase creation for a given country -------------------------
 
 country=Afr.country.list[15]
 
 #Create working directory and set working directory for a given country
-dir.create(paste0("C:/Users/jnune/Documents/ADAFolder/",country))# Only the first time and if it has not been created
-setwd(paste0("C:/Users/jnune/Documents/ADAFolder/",country))
-getwd()
+dir.create(paste0(getwd(),"/",country))# Only the first time and if it has not been created
+setwd(paste0(getwd(),"/",country))
 
 #Define extent and margin. Deprecated. Not use.
 #Boundaries=getData('GADM', country=country, level=1)
@@ -99,7 +108,6 @@ plot(Boundaries)
 #Stations Database Generacion (BaseDatosEstaciones) for a given country
 country.rts=crop(pre.monthly.AFR,Boundaries)
 country.rts=mask(country.rts,Boundaries)
-
 country.rts.monthly=rts(country.rts,d)
 country.rts.anual <- apply.yearly(country.rts.monthly, sum)
 plot(mean(country.rts.anual@raster))
@@ -121,9 +129,6 @@ BaseDatosEstaciones=data.frame(id_station=paste0("station_",1:size),
 #Here the Stations DataBase ("BaseDatosEstaciones.csv") is saved into the working directory
 write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",row.names = FALSE)
 write.csv(BaseDatosEstaciones,"BaseDatosEstacionesBackup.csv",row.names = FALSE)
-rm(BaseDatosEstaciones)
-BaseDatosEstaciones <- read.csv("BaseDatosEstaciones.csv",sep=",")
-
 
 #Records DataBase Generation ("BaseDatosRegistros.csv") for a given country
 ppDB=extract(country.rts,data.frame(rs)[,2:3])
@@ -151,45 +156,41 @@ for (i in 3:14){
 #Here the Records DataBase ("BaseDatosRegistros.csv") is saved into the working directory
 write.csv(BaseDatosRegistros,"BaseDatosRegistros.csv",row.names = FALSE)
 write.csv(BaseDatosRegistros,"BaseDatosRegistrosBackup.csv",row.names = FALSE)
-rm(BaseDatosRegistros)
-BaseDatosRegistros <- read.csv("BaseDatosRegistros.csv",sep=",")
 #................................................. END ...........................................................
 
 
 
-
-
-###################################################################################################################
-#                                    BLOCK I.B. DATABASE CONSTRUCTION FROM CHIRPS                                 #
-#                                                                                                                 #
-###################################################################################################################
+# BLOCK I.B. DATABASE CONSTRUCTION FROM CHIRPS ------------------
 #AFRICAN DROUGHT ATLAS CHIRPS
-##########################################################################
-#         INICIO DE CREACION DE BASES DE DATOS BASADAS EN CHIRPS         #
 
+# libreries ========
 library(raster)
 library(countrycode)
 library(rgdal)
+library(ncdf4);library(chron);library(lattice);library(RColorBrewer)
+library(rgdal);library(sp);library(raster)
 
-#rm(list = ls())
-setwd("C:/Users/jnune/Documents/ADAFolder")
-# Listado de paises seg?n codigo ISO
+# config ===========
+workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
+
+# Setup, Country Code, Shape and raster creation ========
+setwd(workdir)
+# Listado de paises segun codigo ISO
 ISO.codes=read.csv("CountryISOCodes.csv",sep=";")
 Afr.country.list=as.character(ISO.codes$ThreeLetter)
 Afr.country.name=countrycode(Afr.country.list, "iso3c","country.name")
 
-#Funci?n para muestreo de estaciones cuando hay m?s de 3500
+#Funcion para muestreo de estaciones cuando hay mas de 3500
 randomSample = function(df,n) { 
   return (df[sample(nrow(df), n),])}
 
-#...............................
-# Selecci?n del pa?s de trabajo
+# Seleccion del pais de trabajo
 country=Afr.country.list[58]
 
 #Create working directory and set working directory
-dir.create(paste0("C:/Users/jnune/Documents/ADAFolder/",country))
-setwd(paste0("C:/Users/jnune/Documents/ADAFolder/",country))
-getwd()
+dir.create(paste0(workdir,country))
+setwd(paste0(getwd(),"/",country))
+
 
 
 #Define extent and margin. Deprecated. Not use.
@@ -217,18 +218,15 @@ ymax=round(ymax,4)
 # Download netCDF file
 url=paste0('http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/.monthly/.global/.precipitation/X/',xmin,'/',xmax,'/RANGEEDGES/Y/',ymin,'/',ymax,'/RANGEEDGES/T/(Jan%201981)/(Dec%202016)/RANGE/data.nc')
 dfile=c("data.nc")
+#tiempo adicional para conexiones lentas 
+options(timeout = max(300, getOption("timeout")))
 download.file(url, mode="wb",destfile=paste0(getwd(),"/data.nc"))
 #If download fail, then copy paste url in a web browser and download the data.nc file manually
 #After download, put the file into the country's folder.
 
-#...............................................................................
-# Lectura de datos mediante netCDF
+# Lectura de datos mediante netCDF ===========
 # 06/07/2017
-#
 # H.Maureira
-#.....................
-
-library(ncdf4);library(chron);library(lattice);library(RColorBrewer); library(rgdal);library(sp);library(raster)
 
 #Importar datos (Esto debe ser descargado de manera manual desde IRI)
 #datos_ncdf <- nc_open("./input/data_10N_20S.nc")
@@ -263,9 +261,8 @@ dim(lonlat)
 #Transformar el array en un rasterbrick (no es necesario parece)
 #array_brick <- brick(prcp_array, xmn = min(lon), xmx = max(lon), ymn = min(lat), ymx = max(lat))
 
-#............................................................................
-# Se selecciona mapa del pa?s para seleccionar puntos de inter?s
-##############################################################
+# Se selecciona mapa del pa?s para seleccionar puntos de interes ==========
+
 
 #Se usan los l?mites del mapa para recortar la base de datos
 mapa<-Boundaries
@@ -374,11 +371,9 @@ for (i in 3:14){
 
 #row.names(BaseRegistrosPr)=NULL
 write.csv(BaseDatosRegistros,"BaseDatosRegistros.csv",sep=",",row.names=FALSE)
-write.csv(BaseDarosRegistros,"BaseDarosRegistrosBackup.csv",sep=",",row.names=FALSE)
-rm(BaseDatosRegistros)
-BaseDatosRegistros = read.csv(paste0(getwd(),"/BaseDatosRegistros.csv"),sep=",",header=TRUE)
+write.csv(BaseDatosRegistros,"BaseDarosRegistrosBackup.csv",sep=",",row.names=FALSE)
 
-#BaseDatosEstaciones. Defino el tama?o total a 500.
+#BaseDatosEstaciones. Defino el tama?o total a 500
 BaseDatosEstaciones=read.csv(paste0(getwd(),"/est_procesadas/metadata.txt"),sep=",",header=TRUE)
 colnames(BaseDatosEstaciones)[1]="id_station"
 row.names(BaseDatosEstaciones)=NULL
@@ -390,6 +385,4 @@ if (dim(BaseDatosEstaciones)[1]>500){
 
 write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",sep=",", row.names=FALSE)
 write.csv(BaseDatosEstaciones,"BaseDatosEstacionesBackup.csv",sep=",", row.names=FALSE)
-rm(BaseDatosEstaciones)
-BaseDatosEstaciones = read.csv(paste0(getwd(),"/BaseDatosEstaciones.csv"),sep=",",header=TRUE)
 #..........................................................END ...........................................
