@@ -373,7 +373,7 @@ write.csv(BaseDatosRegistros,"BaseDatosRegistros.csv",sep=",",row.names=FALSE)
 write.csv(BaseDatosRegistros,"BaseDarosRegistrosBackup.csv",sep=",",row.names=FALSE)
 
 #BaseDatosEstaciones. Defino el tama?o total a 500
-BaseDatosEstaciones=read.csv(paste0(getwd(),"/est_procesadas/metadata.txt"),sep=",",header=TRUE)
+BaseDatosEstaciones=read.csv(paste0(getwd(),"/est_procesadas/metadata.txt"),sep=";",header=TRUE)
 colnames(BaseDatosEstaciones)[1]="id_station"
 row.names(BaseDatosEstaciones)=NULL
 if (dim(BaseDatosEstaciones)[1]>500){

@@ -1,9 +1,20 @@
-#AfricanDroughtAtlas2018v2 17/10/2018
-#Based on CRU: 02/08/2018
-#THIS TRY IS WITH REG ADAPT WITHOUT MODIFIERS
-
+##################################################
+## -------------------------------------------------
+## Project: AfricanDroughtAtlas
+## Script purpose: 
+## Date Created: 09-05-2023
+## Baed on CRU: 02-08-2018
+## Author 1: J. Nuñez
+## Author 2: H. Maureria
+## Author 3: P. Rojas
+## Email: hmaureria@cazalac.org
+## -------------------------------------------------
+## Notes: 
+##        
+##        -THIS TRY IS WITH REG ADAPT WITHOUT MODIFIERS
+##################################################
 #####
-#import Libraries
+#import libraries
 library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
 library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(corrplot);library(sqldf)
 library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para mantener orden texto-numero en id_station
@@ -13,12 +24,13 @@ library(RSAGA);library(gtools)
 
 #####
 #config
-workdir = "C:/Users/HMC/Documents/Cazalac/Proyectos_Ejec/Unesco_ADA/"
-country="UGA" #PLEASE REPLACE WITH CORRESPONDING THREE ISO LETTER . IN THIS CASE BOTZWANA=BWA
+workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
+country="SWZ" #PLEASE REPLACE WITH CORRESPONDING THREE ISO LETTER . IN THIS CASE BOTZWANA=BWA
 #THREE LETTER CODES CAN BE FOUND IN "CountryISOCodes.csv"
 
 #####
 #Function
+setwd(workdir)
 source('DroughAtlasFunctions.R')
 
 #####
@@ -252,7 +264,7 @@ for (est in 1:estaciones){
   orderX=order(X)
   XY<-data.frame(XY[orderX,])
   z <- read.zoo(XY)
-  gz <- zoo(,seq(min(time(z)), max(time(z))))
+  gz <- zoo( x = NULL ,seq(min(time(z)), max(time(z))))
   XYzoo<-merge(z, gz)
   XYdf<-data.frame(X=index(XYzoo),Y=XYzoo,row.names=NULL)
   
@@ -346,7 +358,8 @@ RegStations=data.frame(id_station=NA,ClustReg_adapt=NA,Criteria=NA)
 counter=1
 Skips=3
 MaxRS=21 #Maximum number of stations per region allowed
-while(length(d_adapt[1,])>0) {#Acá aparece el error de library "homtest": Solucionado
+#cuando d_adapt[1,] es 0, genera un error de dimensiones, por lo que se setea a max 1
+while(length(d_adapt[1,])>=1) {#Acá aparece el error de library "homtest": Solucionado
   REG_adapt=list()# Almacena el nombre de las estaciones disponibles en cada iteracion
   BaseReg_adapt=list()#Almacena los registros de las estaciones para calcular H1
   H1s=0
@@ -386,7 +399,7 @@ while(length(d_adapt[1,])>0) {#Acá aparece el error de library "homtest": Soluc
   }
   if(crit==1) { RSt=unlist(REG_adapt)[-i]} else
     if(crit==2) {RSt=unlist(REG_adapt)[-i]} else 
-      if (crit==3) {RSt=unlist(REG_adapt)[c(-i,-(i-1))]} else {RSt=unlist(REG_adapt)}# Corregir aca para que en la ?ltima iteraci?n no elimine a la estaci?n
+      if (crit==3) {RSt=unlist(REG_adapt)[c(-i,-(i-1))]} else {RSt=unlist(REG_adapt)[c(-i)]}# Corregir aca para que en la ?ltima iteraci?n no elimine a la estaci?n
   #Puede ser un d_adaptint que se evalue si sigue teniendo valores mayores a cero o no
   RegSttemp=data.frame(id_station=RSt,ClustReg_adapt=counter,Criteria=crit)
   RegStations=rbind(RegStations,RegSttemp)
