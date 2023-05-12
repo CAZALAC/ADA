@@ -234,7 +234,6 @@ H1ZDi=function (y,Nsim)
   names(ZGAU)="gau"
   #Di calculus
   # .......Calculo de Di Cl?sico y Robusto...# Se calcula una medida alternativa de discordancia
-  library(rrcov)
   if (k<=3) {
     Di<-rep(1,k)
     
@@ -326,5 +325,4 @@ lm.coeficients <- function (modelobject) {
   attributes(p) <- NULL
   salida<-list(slope=s,Pvalue=p)
   return(salida)}
-
 

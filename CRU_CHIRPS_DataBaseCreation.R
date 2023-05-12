@@ -382,6 +382,6 @@ if (dim(BaseDatosEstaciones)[1]>500){
   BaseDatosEstaciones=BaseDatosEstaciones
 }
 
-write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",sep=",", row.names=FALSE)
-write.csv(BaseDatosEstaciones,"BaseDatosEstacionesBackup.csv",sep=",", row.names=FALSE)
+write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv", row.names=FALSE)
+write.csv(BaseDatosEstaciones,"BaseDatosEstacionesBackup.csv", row.names=FALSE)
 #..........................................................END ...........................................
