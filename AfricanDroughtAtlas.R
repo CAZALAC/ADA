@@ -788,9 +788,12 @@ for (j in 1:length(CuantilInteres)){
   }
   
   FQEFrecuenciasDataFrame<-FQEFrequencias[[1]]
+  #pablo: fix cuando lenght es igual a uno, evita error de out of bounds
+  if(length(FQEFrequencias) > 1){
   for (xxx in 2:length(FQEFrequencias)){
     FQEFrecuenciasDataFrame<-rbind(FQEFrecuenciasDataFrame,FQEFrequencias[[xxx]])}
-  FRECUENCIAS[[j]]<-FQEFrecuenciasDataFrame
+  }
+    FRECUENCIAS[[j]]<-FQEFrecuenciasDataFrame
 }
 
  
@@ -823,9 +826,11 @@ for (l in 1:length(ProbInteres)){
   }
   
   FQECuantilesDataFrame<-FQECuantiles[[1]]
+  #fix pablo, previene  out of bounds
+  if(length(FQECuantiles) > 1){
   for (vvv in 2:length(FQECuantiles)){
     FQECuantilesDataFrame<-rbind(FQECuantilesDataFrame,FQECuantiles[[vvv]])
-  }
+  }}
   CUANTILES[[l]]<-FQECuantilesDataFrame
 }  
 
@@ -852,6 +857,8 @@ BaseModelMapCor=BaseModelMap
 # Remove Inf values
 PRCols=grep('^RP',names(BaseModelMapCor))
 BaseModelMapCor[PRCols][BaseModelMapCor[PRCols]==Inf]=NA
+# Agregamos -Inf porque generaba un error
+BaseModelMapCor[PRCols][BaseModelMapCor[PRCols]==-Inf]=NA
 for (i in 1:length(PRCols)){
   BaseModelMapCor[PRCols[i]][is.na(BaseModelMapCor[PRCols[i]])]=max(BaseModelMapCor[PRCols[i]],na.rm=T)
 }
@@ -987,7 +994,7 @@ names(brQ) <- raster_list #CAZALAC mod so predict function can be executed (best
 BaseModelMapCor2=na.omit(cbind(BaseModelMapCor,Prtrs))
 #BaseModelMapCor2=randomSample(BaseModelMapCor2,500)# Activar en caso muy grande
 write.csv(BaseModelMapCor2,"BaseModelMapCor2.csv",row.names=FALSE)
-View(BaseModelMapCor2)
+View(BaseModelMapCor)
 
 #....Modelling and Mapping of precipitation quantiles
 #.......Save calibration, validation and variable importance plots to a PDF
