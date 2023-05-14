@@ -25,7 +25,7 @@ library(RSAGA);library(gtools)
 #####
 #config
 workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
-country="DJI" #PLEASE REPLACE WITH CORRESPONDING THREE ISO LETTER . IN THIS CASE BOTZWANA=BWA
+country="BWA" #PLEASE REPLACE WITH CORRESPONDING THREE ISO LETTER . IN THIS CASE BOTZWANA=BWA
 #THREE LETTER CODES CAN BE FOUND IN "CountryISOCodes.csv"
 
 #####
@@ -196,8 +196,8 @@ head(BaseDatosRegistros,3)
   # C.5.3. Aggregate record indices and add to Stations's DataBase
   BaseDatosIntermedia<-cbind(BaseRegistrosPr,SI,JMD,IFM)# Uno las columnas con los Indices calculados para cada registro. Contiene los valores anuales.
   write.csv(BaseDatosIntermedia,"BaseIntermedia.csv")
-  rm(BaseDatosIntermedia)
-  BaseDatosIntermedia <- read.csv("BaseIntermedia.csv",sep=",")
+  #rm(BaseDatosIntermedia)
+  #BaseDatosIntermedia <- read.csv("BaseIntermedia.csv",sep=",")
   BaseDatosIntermedia$id_station=as.factor(BaseDatosIntermedia$id_station) #se habilita esta parte. HMC
   
   # C.5.4. Derivated variables
@@ -231,8 +231,8 @@ head(BaseDatosRegistros,3)
                                LastYear=UltimoAnio_por_Estacion) #Ok, está arreglado habilitando la opción de usar factores.
   
   write.csv(BaseDatosIndices,"BaseDatosIndices.csv",row.names=FALSE)
-  rm(BaseDatosIndices)
-  BaseDatosIndices<-read.csv("BaseDatosIndices.csv",header=T,sep=",")
+  #rm(BaseDatosIndices)
+  #BaseDatosIndices<-read.csv("BaseDatosIndices.csv",header=T,sep=",")
 
 
 
@@ -243,8 +243,8 @@ BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosIndices,by="id_station") 
 
 #Here an updated version of Stations DataBase is saved
 write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",row.names=FALSE)
-remove(BaseDatosEstaciones)
-BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T,sep=",")
+#remove(BaseDatosEstaciones)
+#BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T,sep=",")
 head(BaseDatosEstaciones,5)
 
 #...................................................................................................................
@@ -325,15 +325,18 @@ head(BaseDatosEstaciones,5)
                               DW_por_Estacion,Sen_por_Estacion,MKPvalue_por_Estacion)
   colnames(BaseDatosTendenciaDW)[c(1,2,3,4,5,6,7)]<-c('id_station','Pendiente','Pvalue','Autocorr','DW_Pvalue',
                                                       'Sen','MK')
+  #con esto nos evitamos tener que volver a cargar el df
   write.csv(BaseDatosTendenciaDW, "BaseDatosTendenciaDW.csv", row.names=FALSE)
-  rm(BaseDatosTendenciaDW) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
-  BaseDatosTendenciaDW <- read.csv("BaseDatosTendenciaDW.csv",sep=",",header=T)# Y vuelvo a cargar la Base de Datos
+  BaseDatosTendenciaDW = as.data.frame(BaseDatosTendenciaDW)
+  
+  #rm(BaseDatosTendenciaDW) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
+  #BaseDatosTendenciaDW <- read.csv("BaseDatosTendenciaDW.csv",sep=",",header=T)# Y vuelvo a cargar la Base de Datos
   
   # Here an updated version of Stations DataBase is saved
   BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosTendenciaDW,by="id_station") # Ac? uno las dos bases de datos a nivel de estaciones solamente.
   write.csv(BaseDatosEstaciones,  "BaseDatosEstaciones.csv", row.names=FALSE)
-  rm(BaseDatosEstaciones)
-  BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T, sep=",")
+  #rm(BaseDatosEstaciones)
+  #BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T, sep=",")
   head(BaseDatosEstaciones,5) #Hasta el final del Block II, el script se ejecuta de forma normal, salvo pequeños ajustes.
   #.................................................END OF BLOCK II..........................................................
   
@@ -348,7 +351,7 @@ head(BaseDatosEstaciones,5)
 
 BaseCompletaAdapt=merge(BaseDatosEstaciones,BaseRegistrosPr, by.x = "id_station", by.y = "id_station") # Ac? uno la Base de Datos de Estaciones con Indices Medios y  la Base de Datos de Registros
 write.csv(BaseCompletaAdapt, "BaseCompletaAdapt.csv", row.names=FALSE)
-rm(BaseCompletaAdapt) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
+#rm(BaseCompletaAdapt) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
 #BaseCompletaAdapt <- read.csv("BaseCompletaAdapt.csv",header=T, sep=",")# Y vuelvo a cargar la Base de Datos. #CAZ: Probablemente busca factores en col id
 BaseCompletaAdapt <- read.csv("BaseCompletaAdapt.csv",header=T, sep=",", stringsAsFactors = TRUE) #adaptación CAZ
 
@@ -368,7 +371,7 @@ Skips=3
 MaxRS=21 #Maximum number of stations per region allowed
 
 #cuando d_adapt[1,] es 0, genera un error de dimensiones, por lo que se rompe el ciclo abajo
-while(TRUE){ #Acá aparece el error de library "homtest": Solucionado
+while(!(dim(d_adapt)[1] == 0)){ #Acá aparece el error de library "homtest": Solucionado
   REG_adapt=list()# Almacena el nombre de las estaciones disponibles en cada iteracion
   BaseReg_adapt=list()#Almacena los registros de las estaciones para calcular H1
   H1s=0
@@ -413,9 +416,7 @@ while(TRUE){ #Acá aparece el error de library "homtest": Solucionado
   RegSttemp=data.frame(id_station=RSt,ClustReg_adapt=counter,Criteria=crit)
   RegStations=rbind(RegStations,RegSttemp)
   #ya no queda nada en el df
-  if(!(dim(d_adapt)[1] == 0)){
-   break; 
-  }
+
   d_adapt=d_adapt[-grep(paste0(RSt,"$",collapse="|"),row.names(d_adapt)),-grep(paste0(RSt,"$",collapse="|"),colnames(d_adapt))]# Secreto es adicionar signo $
   counter=sum(counter,1)
 } #Al parecer, el error puede bypasearse, dado que el enfoque de while no está bien implementado.
@@ -429,9 +430,9 @@ pie(table(RegStations$Criteria))
 
 BaseDatosEstacionesClust=join(BaseDatosEstaciones,RegStations,by="id_station")
 write.csv(BaseDatosEstacionesClust,"BaseDatosEstacionesClust.csv",row.names=FALSE)
-rm(BaseDatosEstacionesClust)
-BaseDatosEstacionesClust=read.csv("BaseDatosEstacionesClust.csv",sep=",") #Al parecer, stringsasfactors antes era true POR DEFECTO.
-BaseDatosEstacionesClust=read.csv("BaseDatosEstacionesClust.csv",sep=",", stringsAsFactors = TRUE)
+#rm(BaseDatosEstacionesClust)
+#BaseDatosEstacionesClust=read.csv("BaseDatosEstacionesClust.csv",sep=",") #Al parecer, stringsasfactors antes era true POR DEFECTO.
+#BaseDatosEstacionesClust=read.csv("BaseDatosEstacionesClust.csv",sep=",", stringsAsFactors = TRUE)
 head(BaseDatosEstacionesClust,5)
 # D.1.8. Fix database names
 NombreClusters=colnames(BaseDatosEstacionesClust[grep('^Clu',names(BaseDatosEstacionesClust))]) #acá existe un error al parecer
@@ -653,9 +654,9 @@ BaseResumenCluster$NDiscSites<- as.numeric(as.character(BaseResumenCluster$NDisc
 BaseResumenCluster$Sitios<- as.numeric(as.character(BaseResumenCluster$Sitios))
 BaseResumenCluster$Cluster<- as.factor(BaseResumenCluster$Cluster)
 write.csv(BaseResumenCluster,"BaseResumenCluster.csv",row.names =FALSE)
-rm(BaseResumenCluster)
+#rm(BaseResumenCluster)
 #BaseResumenCluster=read.csv("BaseResumenCluster.csv",sep=",") #Ojo con esta parte, quizás hay que ver el tema de los factores
-BaseResumenCluster=read.csv("BaseResumenCluster.csv",sep=",", stringsAsFactors = TRUE) #Adapt Cazalac
+#BaseResumenCluster=read.csv("BaseResumenCluster.csv",sep=",", stringsAsFactors = TRUE) #Adapt Cazalac
 View(BaseResumenCluster)
 
 #............................................................................................................
@@ -870,8 +871,9 @@ for (i in 1:length(FQCols)){
 }
 
 write.csv(BaseModelMapCor, file = "BaseModelMapCor.csv",row.names=FALSE)
-remove(BaseModelMapCor) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
-BaseModelMapCor <- read.csv(file="BaseModelMapCor.csv",sep=",",head=T)# Y vuelvo a cargar la Base de Datos
+#no es necesario
+#remove(BaseModelMapCor) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
+#BaseModelMapCor <- read.csv(file="BaseModelMapCor.csv",sep=",",head=T)# Y vuelvo a cargar la Base de Datos
 View(BaseModelMapCor)
 # At this stage, the Final DataBase "BaseModelMapCor", with al necessary variables for mapping is already available
 #The user can produce preliminary maps with conventional interpolation methods
@@ -915,6 +917,8 @@ writeSpatialShape(BaseMPMaskPlot, "BaseMPMaskPlot")
 
 #OPcion Thiessen con Voronoi dentro de R
 Thiessen <- voronoipolygons(BaseMPMaskPlot)
+
+
 Thiessen<-spCbind(Thiessen, data.frame(BaseMPMaskPlot))
 Thiessen <- Thiessen[,!(names(Thiessen) %in% c("optional"))]
 Thiessen <- Thiessen[,-c(1,2)]
@@ -1094,6 +1098,7 @@ for(i in 1:length(MapVarRetPeriod)){
     if (is.na(RPs3[j,"FCds"])==FALSE) RPs3[j,MapVarRetPeriod[i]]=RPs3[j,MapVarRetPeriod[i]] else RPs3[j,MapVarRetPeriod[i]]=RPs2[j,MapVarRetPeriod[i]]
   }
   qdatafnRP[MapVarRetPeriod[i]]=RPs3[MapVarRetPeriod[i]]
+
   
   #Identificacion de predictando
   Predictant<- MapVarRetPeriod[i] # Defino el nombre del archivo de salida

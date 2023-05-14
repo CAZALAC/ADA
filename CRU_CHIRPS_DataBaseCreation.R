@@ -30,7 +30,7 @@ library(gdata)
 
 # Config =================
 workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
-COUTRYNUM = 19
+COUTRYNUM = 5
 # Setup, Country Code, Shape and raster creation =================
 
 setwd(workdir)
@@ -172,7 +172,7 @@ library(rgdal);library(sp);library(raster)
 
 # config ===========
 workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
-COUTRYNUM = 15
+COUTRYNUM = 5
 # Setup, Country Code, Shape and raster creation ========
 setwd(workdir)
 # Listado de paises segun codigo ISO
