@@ -30,14 +30,20 @@ library(gdata)
 
 # Config =================
 workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
-COUTRYNUM = 5
+#COUTRYNUM = 15
+country="ALLC" #PLEASE REPLACE WITH CORRESPONDING THREE ISO LETTER . IN THIS CASE BOTZWANA=BWA
+
 # Setup, Country Code, Shape and raster creation =================
 
 setwd(workdir)
+
 # Listado de paises seg?n codigo ISO
+if(!country=="ALLC"){
 ISO.codes=read.csv("CountryISOCodes.csv",sep=";")
 Afr.country.list=as.character(ISO.codes$ThreeLetter)
 Afr.country.name=countrycode(Afr.country.list, "iso3c","country.name")
+COUTRYNUM = as.numeric(rownames(ISO.codes[ISO.codes$ThreeLetter == country,]))
+}
 BoundariesAFR=readOGR("AfricaDA.shp") #from http://www.maplibrary.org/library/stacks/Africa/index.htm
 projection(BoundariesAFR)="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
 
@@ -86,15 +92,21 @@ plot(mean(pre.anual@raster))
 
 
 # DataBase creation for a given country -------------------------
-
+if(!country=="ALLC"){
 country=Afr.country.list[COUTRYNUM]
-
+}else{
+  country="ALLC"
+}
 #Create working directory and set working directory for a given country
 dir.create(paste0(getwd(),"/",country))# Only the first time and if it has not been created
 setwd(paste0(getwd(),"/",country))
 
 #Define extent and margin. Deprecated. Not use.
+if(!country=="ALLC"){
 Boundaries=raster::getData('GADM', country=country, level=1)
+}else{
+Boundaries=BoundariesAFR
+}
 writeOGR(Boundaries, dsn = '.', layer = country, driver = "ESRI Shapefile",overwrite_layer=TRUE)
 #plot(Boundaries)
 #rm(Boundaries)
@@ -172,13 +184,14 @@ library(rgdal);library(sp);library(raster)
 
 # config ===========
 workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
-COUTRYNUM = 5
+country="DJI" #PLEASE REPLACE WITH CORRESPONDING THREE ISO LETTER . IN THIS CASE BOTZWANA=BWA
 # Setup, Country Code, Shape and raster creation ========
 setwd(workdir)
 # Listado de paises segun codigo ISO
 ISO.codes=read.csv("CountryISOCodes.csv",sep=";")
 Afr.country.list=as.character(ISO.codes$ThreeLetter)
 Afr.country.name=countrycode(Afr.country.list, "iso3c","country.name")
+COUTRYNUM = as.numeric(rownames(ISO.codes[ISO.codes$ThreeLetter == country,]))
 
 #Funcion para muestreo de estaciones cuando hay mas de 3500
 randomSample = function(df,n) { 
