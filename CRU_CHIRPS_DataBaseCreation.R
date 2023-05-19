@@ -184,21 +184,23 @@ library(rgdal);library(sp);library(raster)
 
 # config ===========
 workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
-country="DJI" #PLEASE REPLACE WITH CORRESPONDING THREE ISO LETTER . IN THIS CASE BOTZWANA=BWA
+country="ALLC" #PLEASE REPLACE WITH CORRESPONDING THREE ISO LETTER . IN THIS CASE BOTZWANA=BWA
 # Setup, Country Code, Shape and raster creation ========
 setwd(workdir)
 # Listado de paises segun codigo ISO
+if(!(country == "ALLC")){
 ISO.codes=read.csv("CountryISOCodes.csv",sep=";")
 Afr.country.list=as.character(ISO.codes$ThreeLetter)
 Afr.country.name=countrycode(Afr.country.list, "iso3c","country.name")
 COUTRYNUM = as.numeric(rownames(ISO.codes[ISO.codes$ThreeLetter == country,]))
-
+# Seleccion del pais de trabajo
+country=Afr.country.list[COUTRYNUM]
+}
 #Funcion para muestreo de estaciones cuando hay mas de 3500
 randomSample = function(df,n) { 
   return (df[sample(nrow(df), n),])}
 
-# Seleccion del pais de trabajo
-country=Afr.country.list[COUTRYNUM]
+
 
 #Create working directory and set working directory
 dir.create(paste0(workdir,country))
@@ -207,8 +209,15 @@ setwd(paste0(getwd(),"/",country))
 
 
 #Define extent and margin. Deprecated. Not use.
+if(!(country == "ALLC")){
 Boundaries=raster::getData('GADM', country=country, level=1)
+} else {
+BoundariesAFR=readOGR("../AfricaDA.shp") #from http://www.maplibrary.org/library/stacks/Africa/index.htm
+projection(BoundariesAFR)="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
+Boundaries = BoundariesAFR
+}
 writeOGR(Boundaries, dsn = '.', layer = country, driver = "ESRI Shapefile",overwrite_layer=TRUE)
+
 #rm(Boundaries)
 #save.image(paste0("C:/Users/jnune/Documents/AtlasSequiaALCCRU/",country,"/",country,".RData"))
 ##                CORREGIR MAPA MANUALMENTE
@@ -227,14 +236,42 @@ xmax=round(xmax,4)
 ymin=round(ymin,4)
 ymax=round(ymax,4)
 
-# Download netCDF file
-url=paste0('http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/.monthly/.global/.precipitation/X/',xmin,'/',xmax,'/RANGEEDGES/Y/',ymin,'/',ymax,'/RANGEEDGES/T/(Jan%201981)/(Dec%202016)/RANGE/data.nc')
-dfile=c("data.nc")
-#tiempo adicional para conexiones lentas 
-options(timeout = max(300, getOption("timeout")))
-download.file(url, mode="wb",destfile=paste0(getwd(),"/data.nc"))
+
 #If download fail, then copy paste url in a web browser and download the data.nc file manually
 #After download, put the file into the country's folder.
+#esto se encarga de la descarga por parte
+if(!(country == "ALLC")){
+  # Download netCDF file
+  url=paste0('http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/.monthly/.global/.precipitation/X/',xmin,'/',xmax,'/RANGEEDGES/Y/',ymin,'/',ymax,'/RANGEEDGES/T/(Jan%201981)/(Dec%202016)/RANGE/data.nc')
+  dfile=c("data.nc")
+  #problema en observatorio, no deja descargar archivos tan grandes
+  print(url)
+  #tiempo adicional para conexiones lentas 
+  options(timeout = max(600, getOption("timeout")))
+  download.file(url, mode="wb",destfile=paste0(getwd(),"/data.nc"))
+}else{
+  ydummy = 0
+  url=paste0('http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/.monthly/.global/.precipitation/X/',xmin,'/',xmax,'/RANGEEDGES/Y/',ydummy,'/',ymax,'/RANGEEDGES/T/(Jan%201981)/(Dec%202016)/RANGE/data.nc')
+  dfile=c("data.nc")
+  #tiempo adicional para conexiones lentas 
+  options(timeout = max(6000, getOption("timeout")))
+  download.file(url, mode="wb",destfile=paste0(getwd(),"/data1.nc"))
+  url=paste0('http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/.monthly/.global/.precipitation/X/',xmin,'/',xmax,'/RANGEEDGES/Y/',ymin,'/',ydummy,'/RANGEEDGES/T/(Jan%201981)/(Dec%202016)/RANGE/data.nc')
+  dfile=c("data.nc")
+  #problema en observatorio, no deja descargar archivos tan grandes
+  download.file(url, mode="wb",destfile=paste0(getwd(),"/data2.nc"))
+  #El merge se debe hacer de forma manual por el momento,
+  #Se hizo con el paquete cdo ejemplo:
+  #sudo cdo collgrid data1.nc data2.nc dat
+  #af1.nc
+
+  # Ruta de los archivos netCDF
+  file1 <- paste0(getwd(),"/data1.nc")
+  file2 <- paste0(getwd(),"/data2.nc")
+  outputFile <-  paste0(getwd(),"/archivo_salida.nc")
+  
+  
+ }
 
 # Lectura de datos mediante netCDF ===========
 # 06/07/2017
