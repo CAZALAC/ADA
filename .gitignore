@@ -1,6 +1,8 @@
 .nc
 *.nc
 .Rproj.user
+.Rdata
+.RHistory
 DZA/
 AGO/
 SHN/
