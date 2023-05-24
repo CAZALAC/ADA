@@ -37,7 +37,6 @@ setwd(workdir)
 
 # Load Functions -------------------
 source('DroughAtlasFunctions.R')
-source('CRU_CHIRPS_DataBaseCreation.R')
 
 # Test -------------------
 rsaga.env()
