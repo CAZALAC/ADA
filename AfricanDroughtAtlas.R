@@ -13,365 +13,355 @@
 ##        
 ##        -THIS TRY IS WITH REG ADAPT WITHOUT MODIFIERS
 ##################################################
-#####
-#import libraries
+
+# Libraries ----------------------
 library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
 library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(corrplot);library(sqldf)
 library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para mantener orden texto-numero en id_station
 library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
-library(maptools);library(stringr);library(raster);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
-library(RSAGA);library(gtools);library(here)
+library(maptools);library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
+library(RSAGA);library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer)
 
-#####
-#config
-#Please replace with the corresponding three-letter ISO code. 
-#Example: "Botswana" becomes "BWA" (according to the "CountryISOCodes.csv" file)
-#Additionally, the name of an input shapefile can be used.
-
-country="BWA"
-
-
-#####
-#Optional Config
-#workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
-
-workdir <- here()
-setwd(workdir)
-
-#####
-#Function
-source('DroughAtlasFunctions.R')
-source('CRU_CHIRPS_DataBaseCreation.R')
-
-#####
-#Check
-rsaga.env()
-rsaga.get.version()
-setwd(paste0("./", country)) #changed slashes
-getwd()
-
-###################################################################################################################
-#                                    BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 or CHIRPS                     #
-#                                    CHOOSE ONE OF THE TWO ALTERNATIVES BASED ON COUNTRY SIZE                     #
-###################################################################################################################
+# Config ----------------------
 #Option 1: Replace with the corresponding three ISO letters. In this case, Botswana should be 
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-
-DataBaseCreation(model="CRU", country = country )
-
-
-##################################################################################################################
-#                                         BLOCK II. VARIABLES AND INDICES  CALCULATION                           #
-##################################################################################################################
+country="BWA"
 
 
-Boundaries=readOGR(".",country) #Obtained from http://www.maplibrary.org/library/stacks/Africa/index.htm
-projection(Boundaries)="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
-plot(Boundaries)
+#  Optinal Config =======================
+#workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
+workdir <- here()
+setwd(workdir)
 
-#BaseDatosEstaciones with 3 columns: factor, num, num
-BaseDatosEstaciones <- read.csv("BaseDatosEstaciones.csv",sep=",")
-head(BaseDatosEstaciones,3)
-BaseDatosRegistros <- read.csv("BaseDatosRegistros.csv",sep=",")
-head(BaseDatosRegistros,3)
+# Load Functions -------------------
+source('DroughAtlasFunctions.R')
+source('CRU_CHIRPS_DataBaseCreation.R')
+
+# Test -------------------
+rsaga.env()
+rsaga.get.version()
 
 
-#BaseDatosRegistros with 14 columns:factor, int, 12 num
-BaseRegistrosPr=BaseDatosRegistros
+# I. DATABASE CONSTRUCTION ------------
+# Block i.a. database construction from CRU 3.21 or CHIRPS
+# Choose one of the two model options based on country size    
+# Option 1: "CRU"  CRU 3.21
+# Option 2: "CHIRPS" from http://iridl.ldeo.columbia.edu resolution 0.25'
 
-# Monthly accumulated precipitation values 
-RegionDF<-BaseRegistrosPr
-RegionDF[,1] <- factor(RegionDF[,1]) #Defino solamente los niveles del DF, ya que el subset mantiene todos los anteriores.
+database_creation(model="CRU", country = country )
 
-#SIMULACION
-#RegionDF <- RegionDFSim
-#RegionDF[,1] <- factor(RegionDF[,1])
+# II. VARIABLES AND INDICES  CALCULATION --------------
 
-#Almacenamiento de Estaciones pertenecientes a la region, en una lista
-#(Paso Necesario, ya que se cambiara el formato a Long)
-#---------------------------------------------------------------------
-
-EstacionesWide <- list()
-#levels(reorder(RegionDF[,1]))
-for (i in mixedsort(levels(RegionDF[,1]))){
-  EstacionesWider <- subset(RegionDF, id_station == paste(i))
-  EstacionesWide[[i]] <- EstacionesWider
-  rm(EstacionesWider)
-}
-
-#Almacenamiento de Estaciones en formato Long y en formato necesario para c?lculo de H1
-#--------------------------------------------------------------------------------------
-EstacionesLong <- list()
-#DatosH1 <- list()
-
-for (j in 1:length(EstacionesWide)){
-  dfm <- EstacionesWide[[j]]
-  #De wide a long 
-  # Conveertir data.frame de formato ancho a largo, se resta 1 para eliminar columna "Region"
-  dfm <- melt(dfm[,2:(ncol(dfm))], id.var="Year", variable_name="Month") #Dejar ANTES COMO YEAR #melt(dfm[,2:(ncol(dfm)-1)]
-  names(dfm) <- c("Year", "Month", "Lluvia")
-  # dfm$Mointh is factor, Convert to month number & calc yr_frac
-  lluvia_mo_num <- unclass(dfm$Month)
-  lluvia_mo_frac <- as.numeric(lluvia_mo_num/12 )
-  yr_frac <- dfm$Year + lluvia_mo_frac
-  # build consolidated data.frame
-  dfm <- data.frame(yr_frac, dfm)
-  dfm <- dfm[order(dfm$yr_frac), ]
-  #dfm <- dfm[!is.na(dfm$Lluvia),]
-  dfm <-dfm[2:4]
-  dfm[,2] <- as.character(dfm[,2])
+step2_variable_calculation <- function(country = country){
+  setwd(paste0("./", country)) #changed slashes
+  getwd()  
+  shape_name=paste0(country,".shp",sep="")
+  Boundaries = shapefile(shape_name)
+  #Boundaries=readOGR(".",country) #Obtained from http://www.maplibrary.org/library/stacks/Africa/index.htm
+  projection(Boundaries)="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
+  plot(Boundaries)
   
-  EstacionesLong[[j]] <- dfm
-  #DatosH1[[j]] <- dfm[,3]
-}
-
-#Sumatoria de cada Estacion, que sera almacenado en otra lista
-#---------------------------------------------------------
-k <- 12 #This is a critical values because defines the time step to be analyzed latter
-
-#Creacion de la lista donde se va a almacenar la suma.
-EstacionesSuma <- list()
-
-#Sumatorias, en base al valor de k, que se almacena en EstacionesSuma.
-for (l in 1:length(EstacionesLong)){#Selecciono la Estacion en Long
+  #BaseDatosEstaciones with 3 columns: factor, num, num
+  BaseDatosEstaciones <- read.csv("BaseDatosEstaciones.csv",sep=",")
+  head(BaseDatosEstaciones,3)
+  BaseDatosRegistros <- read.csv("BaseDatosRegistros.csv",sep=",")
+  head(BaseDatosRegistros,3)
   
-  datospp <- EstacionesLong[[l]][,3] #almaceno los valores de pp que seran sumados despues
   
-  EstacionSumar <- EstacionesLong[[l]] #se escoge la estacion en formato long
-  EstacionSumar[,3] <- NA #Se asigna columna de valores de pp como NA.
-  colnames(EstacionSumar)[3] <- names(EstacionesWide)[[l]]    #"Suma" 
+  #BaseDatosRegistros with 14 columns:factor, int, 12 num
+  BaseRegistrosPr=BaseDatosRegistros
   
-  for (m in 1:nrow(EstacionSumar)){ #aca es donde se empieza a determinar si la sumatoria se hace o no.
-    FilaFinal <- m
-    FilaInicial <- (FilaFinal-(k-1))
+  # Monthly accumulated precipitation values 
+  RegionDF<-BaseRegistrosPr
+  RegionDF[,1] <- factor(RegionDF[,1]) #Defino solamente los niveles del DF, ya que el subset mantiene todos los anteriores.
+  
+  #SIMULACION
+  #RegionDF <- RegionDFSim
+  #RegionDF[,1] <- factor(RegionDF[,1])
+  
+  #Almacenamiento de Estaciones pertenecientes a la region, en una lista
+  #(Paso Necesario, ya que se cambiara el formato a Long)
+  #---------------------------------------------------------------------
+  
+  EstacionesWide <- list()
+  #levels(reorder(RegionDF[,1]))
+  for (i in mixedsort(levels(RegionDF[,1]))){
+    EstacionesWider <- subset(RegionDF, id_station == paste(i))
+    EstacionesWide[[i]] <- EstacionesWider
+    rm(EstacionesWider)
+  }
+  
+  #Almacenamiento de Estaciones en formato Long y en formato necesario para c?lculo de H1
+  #--------------------------------------------------------------------------------------
+  EstacionesLong <- list()
+  #DatosH1 <- list()
+  
+  for (j in 1:length(EstacionesWide)){
+    dfm <- EstacionesWide[[j]]
+    #De wide a long 
+    # Conveertir data.frame de formato ancho a largo, se resta 1 para eliminar columna "Region"
+    dfm <- melt(dfm[,2:(ncol(dfm))], id.var="Year", variable_name="Month") #Dejar ANTES COMO YEAR #melt(dfm[,2:(ncol(dfm)-1)]
+    names(dfm) <- c("Year", "Month", "Lluvia")
+    # dfm$Mointh is factor, Convert to month number & calc yr_frac
+    lluvia_mo_num <- unclass(dfm$Month)
+    lluvia_mo_frac <- as.numeric(lluvia_mo_num/12 )
+    yr_frac <- dfm$Year + lluvia_mo_frac
+    # build consolidated data.frame
+    dfm <- data.frame(yr_frac, dfm)
+    dfm <- dfm[order(dfm$yr_frac), ]
+    #dfm <- dfm[!is.na(dfm$Lluvia),]
+    dfm <-dfm[2:4]
+    dfm[,2] <- as.character(dfm[,2])
     
-    if (FilaInicial<=0){
-      EstacionSumar[m,3]<-NA
-    } else{
-      EstacionSumar[m,3] <- sum(datospp[FilaInicial:FilaFinal])
+    EstacionesLong[[j]] <- dfm
+    #DatosH1[[j]] <- dfm[,3]
+  }
+  
+  #Sumatoria de cada Estacion, que sera almacenado en otra lista
+  #---------------------------------------------------------
+  k <- 12 #This is a critical values because defines the time step to be analyzed latter
+  
+  #Creacion de la lista donde se va a almacenar la suma.
+  EstacionesSuma <- list()
+  
+  #Sumatorias, en base al valor de k, que se almacena en EstacionesSuma.
+  for (l in 1:length(EstacionesLong)){#Selecciono la Estacion en Long
+    
+    datospp <- EstacionesLong[[l]][,3] #almaceno los valores de pp que seran sumados despues
+    
+    EstacionSumar <- EstacionesLong[[l]] #se escoge la estacion en formato long
+    EstacionSumar[,3] <- NA #Se asigna columna de valores de pp como NA.
+    colnames(EstacionSumar)[3] <- names(EstacionesWide)[[l]]    #"Suma" 
+    
+    for (m in 1:nrow(EstacionSumar)){ #aca es donde se empieza a determinar si la sumatoria se hace o no.
+      FilaFinal <- m
+      FilaInicial <- (FilaFinal-(k-1))
+      
+      if (FilaInicial<=0){
+        EstacionSumar[m,3]<-NA
+      } else{
+        EstacionSumar[m,3] <- sum(datospp[FilaInicial:FilaFinal])
+      }
     }
+    EstacionesSuma[[l]] <- EstacionSumar #finalmente, se almacena la estacion sumada en una lista.
   }
-  EstacionesSuma[[l]] <- EstacionSumar #finalmente, se almacena la estacion sumada en una lista.
-}
-
-#Same names from "EstacionesWide" are assigned to "EstacionesSuma"
-names(EstacionesSuma) <- names(EstacionesWide)
-
-### JNunez request (bind BaseRegistrosPr w/ monthly sums) ---
-BaseSums <- list()
-for (u in 1:12){
   
-  BaseSums[[u]] <- sapply(EstacionesSuma, function(x) subset(x, Month == month.abb[u], select = colnames(x)[3]))
-  BaseSums[[u]] <- unlist(BaseSums[[u]])
-  names(BaseSums[[u]]) <- NULL
+  #Same names from "EstacionesWide" are assigned to "EstacionesSuma"
+  names(EstacionesSuma) <- names(EstacionesWide)
   
-  names(BaseSums)[u] <- paste(month.abb[u], "_", k, "_months", sep = "")
-  
-}
-
-BaseRegistrosPr_sumas <- data.frame(matrix(unlist(BaseSums), nrow = nrow(BaseRegistrosPr), byrow=F))
-colnames(BaseRegistrosPr_sumas) <- paste(month.abb, "_", k, sep = "")
-
-## bind
-BaseRegistrosPr <- cbind(BaseRegistrosPr, BaseRegistrosPr_sumas)
-CumSum=data.frame(matrix(ncol = 12,nrow=dim(BaseRegistrosPr)[1]))
-for (i in 1:dim(BaseRegistrosPr)[1]){
-  CumSum[i,1:12]=cumsum(as.numeric(BaseRegistrosPr[i,3:14]))
-}
-colnames(CumSum)=paste0("CumSum",month.abb)
-
-BaseRegistrosPr=cbind(BaseRegistrosPr,CumSum)
-write.csv(BaseRegistrosPr,"BaseRegistrosPr.csv",row.names=FALSE)
-
-#.....................................................................................................................
-#                   Calculation of several Indices like Julian Mean Day, Seasonality Index and Modified Fourier Index
-
-JanDec=matrix(BaseRegistrosPr$CumSumDec)
-DiaJulianoAng<-matrix(seq(15,345,30)*2*pi/365,nrow=length(BaseRegistrosPr[[1]]),ncol=12,byrow=TRUE)
-Prec<-BaseRegistrosPr[match(month.abb,names(BaseRegistrosPr))]
-x<-Prec*cos(DiaJulianoAng)/JanDec
-y<-Prec*sin(DiaJulianoAng)/JanDec
-xcos<-matrix(rowMeans(x),nrow=length(BaseRegistrosPr[[1]]),ncol=1)
-ysin<-matrix(rowMeans(y),nrow=length(BaseRegistrosPr[[1]]),ncol=1)
-xcossum<-matrix(rowSums(x),nrow=length(BaseRegistrosPr[[1]]),ncol=1)
-ysinsum<-matrix(rowSums(y),nrow=length(BaseRegistrosPr[[1]]),ncol=1)
-angulo<-atan(ysin/xcos)
-angulo_corregido<-matrix(0,nrow=length(BaseRegistrosPr[[1]]),ncol=1)
-for (k in 1:length(BaseRegistrosPr[[1]])) {
-  if (sum(is.na(xcos[k]>0))|sum(is.na(ysin[k]>0))) angulo_corregido[k]<-NA else
-    if (xcos[k]>0&ysin[k]>0)  angulo_corregido[k]<-angulo[k] else if (xcos[k]<0&ysin[k]<0) angulo_corregido[k]<-angulo[k]+pi  else if (ysin[k]>0&xcos[k]<0) angulo_corregido[k]<-angulo[k]+pi else   angulo_corregido[k]<-angulo[k]+2*pi 
-}
-JMD<-(angulo_corregido*365)/(2*pi)
-SI<-sqrt(xcossum^2+ysinsum^2)
-IFM<-matrix(rowSums((Prec*Prec)/JanDec),nrow=length(BaseRegistrosPr[[1]]),ncol=1) # Esta linea realiza el calculo del Indice de Fourier Modificado
-
-# C.5.3. Aggregate record indices and add to Stations's DataBase
-BaseDatosIntermedia<-cbind(BaseRegistrosPr,SI,JMD,IFM)# Uno las columnas con los Indices calculados para cada registro. Contiene los valores anuales.
-write.csv(BaseDatosIntermedia,"BaseIntermedia.csv")
-#rm(BaseDatosIntermedia)
-#BaseDatosIntermedia <- read.csv("BaseIntermedia.csv",sep=",")
-BaseDatosIntermedia$id_station=as.factor(BaseDatosIntermedia$id_station) #se habilita esta parte. HMC
-
-# C.5.4. Derivated variables
-# C.5.4.1.  Mean Annual Precipitation
-PMA_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$CumSumDec,BaseDatosIntermedia$id_station,mean,na.rm=TRUE))
-
-# C.5.4.2. Seasonality Index (SI)
-SI_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$SI,BaseDatosIntermedia$id_station,mean,na.rm=TRUE))
-
-# C.5.4.3. JUlian Mean Day (JMD)
-JMD_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$JMD,BaseDatosIntermedia$id_station,mean,na.rm=TRUE))
-
-# C.5.4.4. Modified Fourier Index (IFM)
-IFM_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$IFM,BaseDatosIntermedia$id_station,mean,na.rm=TRUE))
-
-# C.5.4.5. Record Length (LongRec)
-Longitud<-function(x) (length(x)-sum(is.na(x)))
-LR_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$CumSumDec,BaseDatosIntermedia$id_station,Longitud))
-
-# C.5.4.6. Firt year of record (FirstYear)
-PrimerAnio_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$Year,BaseDatosIntermedia$id_station,min))
-
-# C.5.4.7. Last year of record (LastYear)
-UltimoAnio_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$Year,BaseDatosIntermedia$id_station,max))
-
-
-# C.5.5. Add indices to Stations DataBase and remove objects from memory
-id_station<-levels(BaseDatosIntermedia$id_station)
-BaseDatosIndices<-data.frame(id_station=id_station,MAP=PMA_por_Estacion, SI_Medio=SI_por_Estacion,
-                             JMD_Medio=JMD_por_Estacion, IFM_Medio=IFM_por_Estacion, RL_Station=LR_por_Estacion, FirstYear=PrimerAnio_por_Estacion,
-                             LastYear=UltimoAnio_por_Estacion) #Ok, está arreglado habilitando la opción de usar factores.
-
-write.csv(BaseDatosIndices,"BaseDatosIndices.csv",row.names=FALSE)
-#rm(BaseDatosIndices)
-#BaseDatosIndices<-read.csv("BaseDatosIndices.csv",header=T,sep=",")
-
-
-
-#Please check correct import. Dimensions and structure or both data.frames
-#Please check that names under id_station are similar in both data.frames
-
-BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosIndices,by="id_station") # Ac? uno las dos bases de datos a nivel de estaciones solamente, no de todos los registros. Contiene los valores medios
-
-#Here an updated version of Stations DataBase is saved
-write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",row.names=FALSE)
-#remove(BaseDatosEstaciones)
-#BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T,sep=",")
-head(BaseDatosEstaciones,5)
-
-#...................................................................................................................
-#                                     Trend, serial correlation, Mann-Kendall and Sen slope calculation
-
-
-
-
-
-RegionTotalS<-sqldf(paste("SELECT id_station, Year, CumSumDec FROM BaseDatosEstaciones join BaseDatosIntermedia USING(id_station)",sep=""))
-#RegionTotalS<-sqldf("select id_station, Year, JanDec from BaseCompleta where RL_Station>=15")
-RegionTotalS_dat<-RegionTotalS[c("CumSumDec","Year")][,]
-RegionTotalS_fac<-factor(RegionTotalS["id_station"][,])
-RegTotalS<-split(RegionTotalS_dat,RegionTotalS_fac)#
-estaciones<-length(RegTotalS)
-
-#....................................................................................
-for (est in 1:estaciones){
-  
-  Y<-RegTotalS[[est]]$CumSumDec/mean(RegTotalS[[est]]$CumSumDec,na.rm=T)
-  X<-RegTotalS[[est]]$Year
-  XY<-cbind(X,Y)
-  orderX=order(X)
-  XY<-data.frame(XY[orderX,])
-  z <- read.zoo(XY)
-  gz <- zoo( x = NULL ,seq(min(time(z)), max(time(z))))
-  XYzoo<-merge(z, gz)
-  XYdf<-data.frame(X=index(XYzoo),Y=XYzoo,row.names=NULL)
-  
-  mk<-as.numeric(MannKendall(as.ts(XYzoo)))[2]# Paquete Kendall
-  ss<-zyp.sen(Y~X,data=XYdf)[[1]][2] # Paquete zyp
-  
-  fit=lm(Y~X,data=XYdf)
-  DW<-durbinWatsonTest(fit)#paquete car
-  
-  lm.coeficients <- function (modelobject) {
-    if (class(modelobject) != "lm") stop("Not an object of class 'lm' ")
-    f <- summary(modelobject)$fstatistic
-    p <- pf(f[1],f[2],f[3],lower.tail=F)
-    s<-summary(modelobject)$coefficients[2]
-    attributes(s) <- NULL
-    attributes(p) <- NULL
-    salida<-list(slope=s,Pvalue=p)
-    return(salida)
+  ### JNunez request (bind BaseRegistrosPr w/ monthly sums) ---
+  BaseSums <- list()
+  for (u in 1:12){
+    
+    BaseSums[[u]] <- sapply(EstacionesSuma, function(x) subset(x, Month == month.abb[u], select = colnames(x)[3]))
+    BaseSums[[u]] <- unlist(BaseSums[[u]])
+    names(BaseSums[[u]]) <- NULL
+    
+    names(BaseSums)[u] <- paste(month.abb[u], "_", k, "_months", sep = "")
+    
   }
-  RegTotalS[[est]]$Pendiente<-lm.coeficients(fit)$slope
-  RegTotalS[[est]]$Pvalue<-lm.coeficients(fit)$Pvalue
-  RegTotalS[[est]]$Autocorr<-DW[[1]]
-  RegTotalS[[est]]$DW_Pvalue<-DW[[3]]
-  RegTotalS[[est]]$Sen<-ss
-  RegTotalS[[est]]$MKPvalue<-mk
+  
+  BaseRegistrosPr_sumas <- data.frame(matrix(unlist(BaseSums), nrow = nrow(BaseRegistrosPr), byrow=F))
+  colnames(BaseRegistrosPr_sumas) <- paste(month.abb, "_", k, sep = "")
+  
+  ## bind
+  BaseRegistrosPr <- cbind(BaseRegistrosPr, BaseRegistrosPr_sumas)
+  CumSum=data.frame(matrix(ncol = 12,nrow=dim(BaseRegistrosPr)[1]))
+  for (i in 1:dim(BaseRegistrosPr)[1]){
+    CumSum[i,1:12]=cumsum(as.numeric(BaseRegistrosPr[i,3:14]))
+  }
+  colnames(CumSum)=paste0("CumSum",month.abb)
+  
+  BaseRegistrosPr=cbind(BaseRegistrosPr,CumSum)
+  write.csv(BaseRegistrosPr,"BaseRegistrosPr.csv",row.names=FALSE)
+  
+  #.....................................................................................................................
+  #                   Calculation of several Indices like Julian Mean Day, Seasonality Index and Modified Fourier Index
+  
+  JanDec=matrix(BaseRegistrosPr$CumSumDec)
+  DiaJulianoAng<-matrix(seq(15,345,30)*2*pi/365,nrow=length(BaseRegistrosPr[[1]]),ncol=12,byrow=TRUE)
+  Prec<-BaseRegistrosPr[match(month.abb,names(BaseRegistrosPr))]
+  x<-Prec*cos(DiaJulianoAng)/JanDec
+  y<-Prec*sin(DiaJulianoAng)/JanDec
+  xcos<-matrix(rowMeans(x),nrow=length(BaseRegistrosPr[[1]]),ncol=1)
+  ysin<-matrix(rowMeans(y),nrow=length(BaseRegistrosPr[[1]]),ncol=1)
+  xcossum<-matrix(rowSums(x),nrow=length(BaseRegistrosPr[[1]]),ncol=1)
+  ysinsum<-matrix(rowSums(y),nrow=length(BaseRegistrosPr[[1]]),ncol=1)
+  angulo<-atan(ysin/xcos)
+  angulo_corregido<-matrix(0,nrow=length(BaseRegistrosPr[[1]]),ncol=1)
+  for (k in 1:length(BaseRegistrosPr[[1]])) {
+    if (sum(is.na(xcos[k]>0))|sum(is.na(ysin[k]>0))) angulo_corregido[k]<-NA else
+      if (xcos[k]>0&ysin[k]>0)  angulo_corregido[k]<-angulo[k] else if (xcos[k]<0&ysin[k]<0) angulo_corregido[k]<-angulo[k]+pi  else if (ysin[k]>0&xcos[k]<0) angulo_corregido[k]<-angulo[k]+pi else   angulo_corregido[k]<-angulo[k]+2*pi 
+  }
+  JMD<-(angulo_corregido*365)/(2*pi)
+  SI<-sqrt(xcossum^2+ysinsum^2)
+  IFM<-matrix(rowSums((Prec*Prec)/JanDec),nrow=length(BaseRegistrosPr[[1]]),ncol=1) # Esta linea realiza el calculo del Indice de Fourier Modificado
+  
+  # C.5.3. Aggregate record indices and add to Stations's DataBase
+  BaseDatosIntermedia<-cbind(BaseRegistrosPr,SI,JMD,IFM)# Uno las columnas con los Indices calculados para cada registro. Contiene los valores anuales.
+  write.csv(BaseDatosIntermedia,"BaseIntermedia.csv")
+  #rm(BaseDatosIntermedia)
+  #BaseDatosIntermedia <- read.csv("BaseIntermedia.csv",sep=",")
+  BaseDatosIntermedia$id_station=as.factor(BaseDatosIntermedia$id_station) #se habilita esta parte. HMC
+  
+  # C.5.4. Derivated variables
+  # C.5.4.1.  Mean Annual Precipitation
+  PMA_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$CumSumDec,BaseDatosIntermedia$id_station,mean,na.rm=TRUE))
+  
+  # C.5.4.2. Seasonality Index (SI)
+  SI_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$SI,BaseDatosIntermedia$id_station,mean,na.rm=TRUE))
+  
+  # C.5.4.3. JUlian Mean Day (JMD)
+  JMD_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$JMD,BaseDatosIntermedia$id_station,mean,na.rm=TRUE))
+  
+  # C.5.4.4. Modified Fourier Index (IFM)
+  IFM_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$IFM,BaseDatosIntermedia$id_station,mean,na.rm=TRUE))
+  
+  # C.5.4.5. Record Length (LongRec)
+  Longitud<-function(x) (length(x)-sum(is.na(x)))
+  LR_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$CumSumDec,BaseDatosIntermedia$id_station,Longitud))
+  
+  # C.5.4.6. Firt year of record (FirstYear)
+  PrimerAnio_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$Year,BaseDatosIntermedia$id_station,min))
+  
+  # C.5.4.7. Last year of record (LastYear)
+  UltimoAnio_por_Estacion<-as.matrix(tapply(BaseDatosIntermedia$Year,BaseDatosIntermedia$id_station,max))
+  
+  
+  # C.5.5. Add indices to Stations DataBase and remove objects from memory
+  id_station<-levels(BaseDatosIntermedia$id_station)
+  BaseDatosIndices<-data.frame(id_station=id_station,MAP=PMA_por_Estacion, SI_Medio=SI_por_Estacion,
+                               JMD_Medio=JMD_por_Estacion, IFM_Medio=IFM_por_Estacion, RL_Station=LR_por_Estacion, FirstYear=PrimerAnio_por_Estacion,
+                               LastYear=UltimoAnio_por_Estacion) #Ok, está arreglado habilitando la opción de usar factores.
+  
+  write.csv(BaseDatosIndices,"BaseDatosIndices.csv",row.names=FALSE)
+  #rm(BaseDatosIndices)
+  #BaseDatosIndices<-read.csv("BaseDatosIndices.csv",header=T,sep=",")
+  
+  
+  
+  #Please check correct import. Dimensions and structure or both data.frames
+  #Please check that names under id_station are similar in both data.frames
+  
+  BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosIndices,by="id_station") # Ac? uno las dos bases de datos a nivel de estaciones solamente, no de todos los registros. Contiene los valores medios
+  
+  #Here an updated version of Stations DataBase is saved
+  write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",row.names=FALSE)
+  #remove(BaseDatosEstaciones)
+  #BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T,sep=",")
+  head(BaseDatosEstaciones,5)
+  
+  #...................................................................................................................
+  #                                     Trend, serial correlation, Mann-Kendall and Sen slope calculation
+  
+  RegionTotalS<-sqldf(paste("SELECT id_station, Year, CumSumDec FROM BaseDatosEstaciones join BaseDatosIntermedia USING(id_station)",sep=""))
+  #RegionTotalS<-sqldf("select id_station, Year, JanDec from BaseCompleta where RL_Station>=15")
+  RegionTotalS_dat<-RegionTotalS[c("CumSumDec","Year")][,]
+  RegionTotalS_fac<-factor(RegionTotalS["id_station"][,])
+  RegTotalS<-split(RegionTotalS_dat,RegionTotalS_fac)#
+  estaciones<-length(RegTotalS)
+  
+  #....................................................................................
+  for (est in 1:estaciones){
+    
+    Y<-RegTotalS[[est]]$CumSumDec/mean(RegTotalS[[est]]$CumSumDec,na.rm=T)
+    X<-RegTotalS[[est]]$Year
+    XY<-cbind(X,Y)
+    orderX=order(X)
+    XY<-data.frame(XY[orderX,])
+    z <- read.zoo(XY)
+    gz <- zoo( x = NULL ,seq(min(time(z)), max(time(z))))
+    XYzoo<-merge(z, gz)
+    XYdf<-data.frame(X=index(XYzoo),Y=XYzoo,row.names=NULL)
+    
+    mk<-as.numeric(MannKendall(as.ts(XYzoo)))[2]# Paquete Kendall
+    ss<-zyp.sen(Y~X,data=XYdf)[[1]][2] # Paquete zyp
+    
+    fit=lm(Y~X,data=XYdf)
+    DW<-durbinWatsonTest(fit)#paquete car
+    
+    lm.coeficients <- function (modelobject) {
+      if (class(modelobject) != "lm") stop("Not an object of class 'lm' ")
+      f <- summary(modelobject)$fstatistic
+      p <- pf(f[1],f[2],f[3],lower.tail=F)
+      s<-summary(modelobject)$coefficients[2]
+      attributes(s) <- NULL
+      attributes(p) <- NULL
+      salida<-list(slope=s,Pvalue=p)
+      return(salida)
+    }
+    RegTotalS[[est]]$Pendiente<-lm.coeficients(fit)$slope
+    RegTotalS[[est]]$Pvalue<-lm.coeficients(fit)$Pvalue
+    RegTotalS[[est]]$Autocorr<-DW[[1]]
+    RegTotalS[[est]]$DW_Pvalue<-DW[[3]]
+    RegTotalS[[est]]$Sen<-ss
+    RegTotalS[[est]]$MKPvalue<-mk
+  }
+  par(mfrow=c(1,2))
+  RegTotalS2<-ldply(RegTotalS, data.frame)
+  colnames(RegTotalS2)[1]<-'id_station'
+  Pendiente_por_Estacion<-as.matrix(tapply(RegTotalS2[[4]],RegTotalS2[[1]],mean))
+  hist(Pendiente_por_Estacion)
+  boxplot(Pendiente_por_Estacion)
+  Pvalue_por_Estacion<-as.matrix(tapply(RegTotalS2[[5]],RegTotalS2[[1]],mean))
+  hist(Pvalue_por_Estacion)
+  boxplot(Pvalue_por_Estacion)
+  Autocor_por_Estacion<-as.matrix(tapply(RegTotalS2[[6]],RegTotalS2[[1]],mean))
+  hist(Autocor_por_Estacion)
+  boxplot(Autocor_por_Estacion)
+  DW_por_Estacion<-as.matrix(tapply(RegTotalS2[[7]],RegTotalS2[[1]],mean))
+  hist(DW_por_Estacion)
+  boxplot(DW_por_Estacion)
+  Sen_por_Estacion<-as.matrix(tapply(RegTotalS2[[8]],RegTotalS2[[1]],mean))
+  hist(Sen_por_Estacion)
+  boxplot(Sen_por_Estacion)
+  MKPvalue_por_Estacion<-as.matrix(tapply(RegTotalS2[[9]],RegTotalS2[[1]],mean))
+  hist(MKPvalue_por_Estacion)
+  boxplot(MKPvalue_por_Estacion)
+  par(mfrow=c(1,1))
+  
+  id_estaciones<-levels(as.factor(RegTotalS2[,1]))
+  BaseDatosTendenciaDW<-cbind(id_estaciones,Pendiente_por_Estacion,Pvalue_por_Estacion,Autocor_por_Estacion,
+                              DW_por_Estacion,Sen_por_Estacion,MKPvalue_por_Estacion)
+  colnames(BaseDatosTendenciaDW)[c(1,2,3,4,5,6,7)]<-c('id_station','Pendiente','Pvalue','Autocorr','DW_Pvalue',
+                                                      'Sen','MK')
+  #con esto nos evitamos tener que volver a cargar el df
+  write.csv(BaseDatosTendenciaDW, "BaseDatosTendenciaDW.csv", row.names=FALSE)
+  BaseDatosTendenciaDW = as.data.frame(BaseDatosTendenciaDW)
+  
+  #rm(BaseDatosTendenciaDW) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
+  #BaseDatosTendenciaDW <- read.csv("BaseDatosTendenciaDW.csv",sep=",",header=T)# Y vuelvo a cargar la Base de Datos
+  
+  # Here an updated version of Stations DataBase is saved
+  BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosTendenciaDW,by="id_station") # Ac? uno las dos bases de datos a nivel de estaciones solamente.
+  write.csv(BaseDatosEstaciones,  "BaseDatosEstaciones.csv", row.names=FALSE)
+  #rm(BaseDatosEstaciones)
+  #BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T, sep=",")
+  head(BaseDatosEstaciones,5) #Hasta el final del Block II, el script se ejecuta de forma normal, salvo pequeños ajustes.
+  #.................................................END OF BLOCK II..........................................................
+  output = list("BaseDatosEstaciones" = BaseDatosEstaciones,"BaseRegistrosPr" = BaseRegistrosPr, "z"=z, "Boundaries"=Boundaries)
+  return(output)
 }
-par(mfrow=c(1,2))
-RegTotalS2<-ldply(RegTotalS, data.frame)
-colnames(RegTotalS2)[1]<-'id_station'
-Pendiente_por_Estacion<-as.matrix(tapply(RegTotalS2[[4]],RegTotalS2[[1]],mean))
-hist(Pendiente_por_Estacion)
-boxplot(Pendiente_por_Estacion)
-Pvalue_por_Estacion<-as.matrix(tapply(RegTotalS2[[5]],RegTotalS2[[1]],mean))
-hist(Pvalue_por_Estacion)
-boxplot(Pvalue_por_Estacion)
-Autocor_por_Estacion<-as.matrix(tapply(RegTotalS2[[6]],RegTotalS2[[1]],mean))
-hist(Autocor_por_Estacion)
-boxplot(Autocor_por_Estacion)
-DW_por_Estacion<-as.matrix(tapply(RegTotalS2[[7]],RegTotalS2[[1]],mean))
-hist(DW_por_Estacion)
-boxplot(DW_por_Estacion)
-Sen_por_Estacion<-as.matrix(tapply(RegTotalS2[[8]],RegTotalS2[[1]],mean))
-hist(Sen_por_Estacion)
-boxplot(Sen_por_Estacion)
-MKPvalue_por_Estacion<-as.matrix(tapply(RegTotalS2[[9]],RegTotalS2[[1]],mean))
-hist(MKPvalue_por_Estacion)
-boxplot(MKPvalue_por_Estacion)
-par(mfrow=c(1,1))
-
-id_estaciones<-levels(as.factor(RegTotalS2[,1]))
-BaseDatosTendenciaDW<-cbind(id_estaciones,Pendiente_por_Estacion,Pvalue_por_Estacion,Autocor_por_Estacion,
-                            DW_por_Estacion,Sen_por_Estacion,MKPvalue_por_Estacion)
-colnames(BaseDatosTendenciaDW)[c(1,2,3,4,5,6,7)]<-c('id_station','Pendiente','Pvalue','Autocorr','DW_Pvalue',
-                                                    'Sen','MK')
-#con esto nos evitamos tener que volver a cargar el df
-write.csv(BaseDatosTendenciaDW, "BaseDatosTendenciaDW.csv", row.names=FALSE)
-BaseDatosTendenciaDW = as.data.frame(BaseDatosTendenciaDW)
-
-#rm(BaseDatosTendenciaDW) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
-#BaseDatosTendenciaDW <- read.csv("BaseDatosTendenciaDW.csv",sep=",",header=T)# Y vuelvo a cargar la Base de Datos
-
-# Here an updated version of Stations DataBase is saved
-BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosTendenciaDW,by="id_station") # Ac? uno las dos bases de datos a nivel de estaciones solamente.
-write.csv(BaseDatosEstaciones,  "BaseDatosEstaciones.csv", row.names=FALSE)
-#rm(BaseDatosEstaciones)
-#BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T, sep=",")
-head(BaseDatosEstaciones,5) #Hasta el final del Block II, el script se ejecuta de forma normal, salvo pequeños ajustes.
-#.................................................END OF BLOCK II..........................................................
+output_2 <- step2_variable_calculation(country = country)
 
 
-
-
-###############################################################################################################
-#                           BLOCK III. REGIONALIZATION USING MINIMUM DISTANCE SEARCHING  ALGORITHM            #
-###############################################################################################################
-
+# III. REGIONALIZATION USING MINIMUM DISTANCE SEARCHING  ALGORITHM -----------------
 # Minimum Distance Searching Algorithm
 
+regionalization <- function (BaseDatosEstaciones, BaseRegistrosPr, VarInter="CumSumDec", Hc=2, Hf=0.95 ){
+# Minimum Distance Searching Algorithm
+#debug BaseDatosEstaciones = output_2$BaseDatosEstaciones; BaseRegistrosPr = output_2$BaseRegistrosPr
 BaseCompletaAdapt=merge(BaseDatosEstaciones,BaseRegistrosPr, by.x = "id_station", by.y = "id_station") # Ac? uno la Base de Datos de Estaciones con Indices Medios y  la Base de Datos de Registros
 write.csv(BaseCompletaAdapt, "BaseCompletaAdapt.csv", row.names=FALSE)
 #rm(BaseCompletaAdapt) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
 #BaseCompletaAdapt <- read.csv("BaseCompletaAdapt.csv",header=T, sep=",")# Y vuelvo a cargar la Base de Datos. #CAZ: Probablemente busca factores en col id
-BaseCompletaAdapt <- read.csv("BaseCompletaAdapt.csv",header=T, sep=",", stringsAsFactors = TRUE) #adaptación CAZ
+#BaseCompletaAdapt <- read.csv("BaseCompletaAdapt.csv",header=T, sep=",", stringsAsFactors = TRUE) #adaptación CAZ
 
-VarInter="CumSumDec" ################Indicate the name of the variable to be analyzed
-Hc=2 # Maximum Acepted Heterogeneity Measure
-Hf=0.95 # H1 factor
+#VarInter="CumSumDec" ################Indicate the name of the variable to be analyzed
+#Hc=2 # Maximum Acepted Heterogeneity Measure
+#Hf=0.95 # H1 factor
 H1_critical=Hc*Hf
 spBEPr_adapt=BaseDatosEstaciones
 coordinates(spBEPr_adapt) <- ~lon+lat
@@ -456,64 +446,19 @@ NombreClusters=colnames(BaseDatosEstacionesClust[grep('^Clu',names(BaseDatosEsta
 # Calculo de la cantidad de clusters en cada Tratamiento y si coinciden con el rango de clusters.
 ClustLevels=length(levels(as.factor(BaseDatosEstacionesClust$ClustReg_adapt)))
 #...........................................END OF BLOCK III.....................................................
+output = list("ClustLevels" = ClustLevels, "NombreClusters" = NombreClusters, "VarInter" = VarInter, "BaseDatosEstacionesClust" = BaseDatosEstacionesClust, "Hc" = Hc)
+return(output)
+}
+output_3 <- regionalization(output_2$BaseDatosEstaciones,output_2$BaseRegistrosPr)
 
+# V. L-MOMENTS BASED REGIONAL FREQUENCY ANALYSIS ------------------------------
 
-#################################################################################################################
-#                                           BLOCK IV: EXPLORATORY DATA ANALYSIS    (OPTIONAL)                   #                                     #
-# #################################################################################################################
-# library("sqldf"); library("circular");library("lmom");library("reshape");library("zoo");library("reshape")
-# #Several plots showing main charateristics of the stations in the specified region
-# region.of.interest=3 #Some of the available regions in ClustReg_adapt or a number between 1 and ClustLevels
-# #VarInter<-"CumSumDec"
-# ListadoEstaciones<-sqldf(paste("select id_station from BaseDatosEstacionesClust where ClustReg_adapt=='",region.of.interest,"'",sep=""))
-# LEst<-levels(factor(ListadoEstaciones["id_station"][,]))
-# Listado<-as.character(LEst)
-# 
-# #.......Save plots to a PDF
-# pdf(paste0("EDA_",country,"_Region_",region.of.interest,".pdf"), width = 16 , height = 10, title = paste0("EDA Plots for ",country,": Region",region.of.interest))
-# par(mfrow=c(3,2))
-# for (m in 1:length(Listado)){
-#   #Fig1. Boxplot
-#   Boxplotmensual<-sqldf(paste("select Jan,Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec from BaseCompletaAdapt where id_station=='",Listado[m],"'",sep=""))
-#   boxplot(Boxplotmensual,   main=Listado[m],pch=20,cex=1, cex.main=1, cex.axis=0.8, cex.lab=0.1,  las=1, xlab="Month", ylab="Precipitation[mm]")
-#   
-#   #Fig2. Barplot
-#   BP<-matrix(colMeans(Boxplotmensual,na.rm=T),nrow=1)
-#   barplot(BP,names.arg=c("E","F","M","A","M","J","J","A","S","O","N","D"),main=Listado[m], cex.names=0.8,cex.main=1,  xlab="Mes", ylab="Precipitation[mm]")
-#   
-#   Var<-sqldf(paste("select ",VarInter," from BaseCompletaAdapt where id_station=='",Listado[m],"'",sep=""))
-#   #Fig3. Histogram
-#   hist(as.numeric(Var[,1]),prob=T,xlab="Precipitation [mm]",ylab="Density",main=paste(Listado[m]," en ",VarInter),cex.main=1)
-#   lines(density(as.numeric(Var[,1]),na.rm=T),col=451,lwd=2)
-#   
-#   # Fig4. Extreme value plot
-#   evplot(as.numeric(Var[,1]),xlab="Gumbel Reduced Variable",ylab="Quantil",main=paste(Listado[m]," en ",VarInter),cex.main=1)
-#   evdistq(quanor, pelnor(samlmu(as.numeric(Var[,1]))))
-#   
-#   # Fig5. L-moment ratio diagram
-#   lmrd(samlmu(as.numeric(Var[,1])),xlim=c(-0.3,0.6),pch=19,col="red",cex=1.5,legend.lmrd=list(cex=1),main=paste(Listado[m]," en ",VarInter),cex.main=1,cex.lab=1)
-#   
-#   #Fig6.Time series plot 
-#   TSP<-sqldf(paste("select Year, Jan,Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec from BaseCompletaAdapt where id_station=='",Listado[m],"'",sep=""))
-#   dfm <- melt(TSP, id.var="Year", variable_name="Mes")
-#   names(dfm) <- c("Year", "Mes", "Precipitacion")
-#   pp_num <- unclass(dfm$Mes)
-#   pp_frac <- as.numeric( (pp_num-0.5)/12   )
-#   yr_frac <- as.numeric(dfm$Year) + pp_frac
-#   dfm <- data.frame(yr_frac,  dfm)
-#   dfm <- dfm[order(dfm$yr_frac), ]
-#   dfmzoo<-zoo(dfm$Precipitacion,as.yearmon(dfm$yr_frac))
-#   plot(dfmzoo,type="h",xlab="Year",ylab="Precipitation[mm]",main=Listado[m],cex.main=1,cex.lab=1)
-#   
-# }
-# dev.off()
-# # ..............................................END OF BLOCK IV .................................................
-
-
-#################################################################################################################
-#                                           BLOCK V: L-MOMENTS BASED REGIONAL FREQUENCY ANALYSIS                #
-#################################################################################################################
-
+regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, BaseDatosEstacionesClust, BaseRegistrosPr, z, Hc ){
+  ClustLevels <- output_3$ClustLevels
+  NombreClusters <- output_3$NombreClusters
+  VarInter <-output_3$VarInter
+  BaseDatosEstacionesClust <- output_3$BaseDatosEstacionesClust
+  BaseRegistrosPr <-output_2$BaseRegistrosPr
 # E.1. Create homogeneous regions
 #Incluir linea con ifelse que evalue la dimension de NombresCluster y asigne MaxClusters
 #VarInter="CumSumDec"
@@ -694,6 +639,7 @@ for (i in 1:length(levels(BaseResumenCluster[,6]))){
   #Se almacena el valor en la columna que corresponda (En el data frame creado anteriormente)
   Sumas[,which(colnames(Sumas) == levels(BaseResumenCluster[,6])[i])] <- suma/length(BaseDatosEstacionesClust[,1])*100 #con esto me seguro que encuentre la letra indicada
   #Sumas$(noquote(levels(datos[,3])[i])) <- suma
+  #
 }
 
 #FIGURAS 3-4-5 (MoranKernel.R)
@@ -711,12 +657,19 @@ ResumeTable <- ResumeTable
 #ResumeTable <- ResumeTable[order(ResumeTable$Trial),] #sacado cazalac
 View(ResumeTable)
 write.csv(ResumeTable,"ResumeTable.csv",row.names=FALSE)
-
+#BaseSummaryStatistics
+#BaseDatosEstacionesClust
 #.............................................END OF BLOCK V ....................................................
+#
+output = list("BaseSummaryStatistics" = BaseSummaryStatistics,  "BaseDatosEstacionesClust" = BaseDatosEstacionesClust, "BaseBaseRegiones" = BaseBaseRegiones, "ResumeTable" = ResumeTable, "BaseMediaCompleta" = BaseMediaCompleta, "BaseProporCeros" = BaseProporCeros, "Basep0bias" = Basep0bias , "Baserfitdist" = Baserfitdist, "Baserfitpara" = Baserfitpara)
+return(output)
+}
+output4 <- regional_frequency_analysis(output_3$ClustLevels,output_3$NombreClusters,output_3$VarInter, output_3$BaseDatosEstacionesClust, output_2$BaseRegistrosPr, output_2$z,output_3$Hc)
 
-##################################################################################################################
-#                                           BLOCK VI: FREQUENCY/QUANTIL/RETURN PERIOD ESTIMATION                 #
-##################################################################################################################
+# VI. FREQUENCY/QUANTIL/RETURN PERIOD ESTIMATION ---------------------------------
+period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, BaseBaseRegiones, ResumeTable, BaseMediaCompleta, BaseProporCeros, Basep0bias, Baserfitdist, Baserfitpara){
+
+#debug BaseSummaryStatistics = output4$BaseSummaryStatistics; BaseDatosEstacionesClust = output4$BaseDatosEstacionesClust; BaseBaseRegiones = output4$BaseBaseRegiones; ResumeTable = output4$ResumeTable
 # These are the L-moments of the Variable of Interest (not necessarily annual precipitation)
 #These are the L-moments of the non zero records
 lmom.df=data.frame(BaseSummaryStatistics[[1]][,,1])
@@ -889,16 +842,19 @@ write.csv(BaseModelMapCor, file = "BaseModelMapCor.csv",row.names=FALSE)
 #remove(BaseModelMapCor) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
 #BaseModelMapCor <- read.csv(file="BaseModelMapCor.csv",sep=",",head=T)# Y vuelvo a cargar la Base de Datos
 View(BaseModelMapCor)
+
 # At this stage, the Final DataBase "BaseModelMapCor", with al necessary variables for mapping is already available
 #The user can produce preliminary maps with conventional interpolation methods
+output5 <- list("BaseModelMapCor" = BaseModelMapCor)
+return(output5)
 #....................................................END F BLOCK VI...........................................
+}
+output5 <- period_estimation(output4$BaseSummaryStatistics, output4$BaseDatosEstacionesClust, output4$BaseBaseRegiones, output4$ResumeTable, output4$BaseMediaCompleta, output4$BaseProporCeros, output4$Basep0bias, output4$Baserfitdist, output4$Baserfitpara)
 
-########################################################################################################
-#                                BLOCK VII: FREQUENCY/RETURN PERIOD/QUANTIL MAPPING                    #
-########################################################################################################
-
+# VII: FREQUENCY/RETURN PERIOD/QUANTIL MAPPING ------------------
+period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
+#debug ResumeTable = output4$ResumeTable; BaseModelMapCor = output5$BaseModelMapCor; Boundaries = output_2$Boundaries
 # Prepare Thiessen polygons mask shapefile and plotting
-
 # Calculo Periodo de Retorno m?ximo posible de calcular 5t- rule Jakob et al, 1999
 #RecLength=quantile(BaseModelMapCorII$RL_Station,0.5)
 RecLength=36
@@ -937,6 +893,11 @@ Thiessen<-spCbind(Thiessen, data.frame(BaseMPMaskPlot))
 Thiessen <- Thiessen[,!(names(Thiessen) %in% c("optional"))]
 Thiessen <- Thiessen[,-c(1,2)]
 plot(Thiessen)
+##########################
+##########################
+#### REVISSAR
+###########################
+##########################
 writeSpatialShape(Thiessen, "Thiessen")
 #rsaga.geoprocessor("shapes_points",16,list(POINTS="BaseMPMaskPlot.shp",POLYGONS="Thiessen",FRAME=4))
 getinfo.shape(paste0(country,".shp"))# Este se edita y guarda aparte con SAGA
@@ -946,6 +907,10 @@ rsaga.geoprocessor("shapes_polygons",11,list(CLIP=paste0(country,".shp"),
                                              S_OUTPUT="CutThiessen.shp",
                                              M_INPUT="Thiessen.shp",
                                              MULTIPLE=0),display.command=TRUE)
+
+
+
+
 #Plot 
 CutThiessen <- readShapeSpatial("CutThiessen.shp")
 CutThiessen <- CutThiessen[,!(names(CutThiessen) %in% c("SP_ID"))]
@@ -1178,3 +1143,60 @@ VarImpRPmeasure=t(VarImpRPmeasure)
 write.csv(CalGOFRPmeasure,"CalGOFRPmeasure.csv", row.names=TRUE)
 write.csv(ValGOFRPmeasure,"ValGOFRPmeasure.csv", row.names=TRUE)
 write.csv(VarImpRPmeasure,"VarImpRPmeasure.csv", row.names=TRUE)
+#end
+}
+period_mapping(output4$ResumeTable, output5$BaseModelMapCor, country, output_2$Boundaries)
+
+
+#END
+
+#################################################################################################################
+#                                           BLOCK IV: EXPLORATORY DATA ANALYSIS    (OPTIONAL)                   #                                     #
+# #################################################################################################################
+# library("sqldf"); library("circular");library("lmom");library("reshape");library("zoo");library("reshape")
+# #Several plots showing main charateristics of the stations in the specified region
+# region.of.interest=3 #Some of the available regions in ClustReg_adapt or a number between 1 and ClustLevels
+# #VarInter<-"CumSumDec"
+# ListadoEstaciones<-sqldf(paste("select id_station from BaseDatosEstacionesClust where ClustReg_adapt=='",region.of.interest,"'",sep=""))
+# LEst<-levels(factor(ListadoEstaciones["id_station"][,]))
+# Listado<-as.character(LEst)
+# 
+# #.......Save plots to a PDF
+# pdf(paste0("EDA_",country,"_Region_",region.of.interest,".pdf"), width = 16 , height = 10, title = paste0("EDA Plots for ",country,": Region",region.of.interest))
+# par(mfrow=c(3,2))
+# for (m in 1:length(Listado)){
+#   #Fig1. Boxplot
+#   Boxplotmensual<-sqldf(paste("select Jan,Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec from BaseCompletaAdapt where id_station=='",Listado[m],"'",sep=""))
+#   boxplot(Boxplotmensual,   main=Listado[m],pch=20,cex=1, cex.main=1, cex.axis=0.8, cex.lab=0.1,  las=1, xlab="Month", ylab="Precipitation[mm]")
+#   
+#   #Fig2. Barplot
+#   BP<-matrix(colMeans(Boxplotmensual,na.rm=T),nrow=1)
+#   barplot(BP,names.arg=c("E","F","M","A","M","J","J","A","S","O","N","D"),main=Listado[m], cex.names=0.8,cex.main=1,  xlab="Mes", ylab="Precipitation[mm]")
+#   
+#   Var<-sqldf(paste("select ",VarInter," from BaseCompletaAdapt where id_station=='",Listado[m],"'",sep=""))
+#   #Fig3. Histogram
+#   hist(as.numeric(Var[,1]),prob=T,xlab="Precipitation [mm]",ylab="Density",main=paste(Listado[m]," en ",VarInter),cex.main=1)
+#   lines(density(as.numeric(Var[,1]),na.rm=T),col=451,lwd=2)
+#   
+#   # Fig4. Extreme value plot
+#   evplot(as.numeric(Var[,1]),xlab="Gumbel Reduced Variable",ylab="Quantil",main=paste(Listado[m]," en ",VarInter),cex.main=1)
+#   evdistq(quanor, pelnor(samlmu(as.numeric(Var[,1]))))
+#   
+#   # Fig5. L-moment ratio diagram
+#   lmrd(samlmu(as.numeric(Var[,1])),xlim=c(-0.3,0.6),pch=19,col="red",cex=1.5,legend.lmrd=list(cex=1),main=paste(Listado[m]," en ",VarInter),cex.main=1,cex.lab=1)
+#   
+#   #Fig6.Time series plot 
+#   TSP<-sqldf(paste("select Year, Jan,Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec from BaseCompletaAdapt where id_station=='",Listado[m],"'",sep=""))
+#   dfm <- melt(TSP, id.var="Year", variable_name="Mes")
+#   names(dfm) <- c("Year", "Mes", "Precipitacion")
+#   pp_num <- unclass(dfm$Mes)
+#   pp_frac <- as.numeric( (pp_num-0.5)/12   )
+#   yr_frac <- as.numeric(dfm$Year) + pp_frac
+#   dfm <- data.frame(yr_frac,  dfm)
+#   dfm <- dfm[order(dfm$yr_frac), ]
+#   dfmzoo<-zoo(dfm$Precipitacion,as.yearmon(dfm$yr_frac))
+#   plot(dfmzoo,type="h",xlab="Year",ylab="Precipitation[mm]",main=Listado[m],cex.main=1,cex.lab=1)
+#   
+# }
+# dev.off()
+# # ..............................................END OF BLOCK IV .................................................

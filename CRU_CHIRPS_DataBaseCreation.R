@@ -8,30 +8,11 @@
 ## Author 3: P. Rojas
 ## Email: hmaureria@cazalac.org
 ## -------------------------------------------------
-## Notes: 
+## Notes:
+## - CRU data from: http://data.ceda.ac.uk/badc/cru/data/cru_ts/cru_ts_3.21/data/pre/cru_ts3.21.1921.1930.pre.dat.gz
 ##       
 ##################################################
 
-
-# BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
-# data from: http://data.ceda.ac.uk/badc/cru/data/cru_ts/cru_ts_3.21/data/pre/cru_ts3.21.1921.1930.pre.dat.gz                 #
-
-# libraries ========
-
-library(raster)
-library(countrycode)
-library(rts)
-library(ncdf4)
-library(HelpersMG)
-library (plyr)
-library(latticeExtra)
-library(reshape2)
-library(gdata)
-library(here)
-library(chron)
-library(lattice)
-library(RColorBrewer)
-library(sp)
 #server down, check
 #library(geodata)
 
@@ -88,8 +69,8 @@ randomSample = function(df,n) {
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
 
-DataBaseCreation <- function(model = "CRU", country = "BWA") {
-  
+database_creation <- function(model = "CRU", country = "BWA") {
+  # BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
   if(model=="CRU"){
     # Optional Config Setup, Country Code, Shape and raster creation =================
     workdir <- here()
@@ -221,6 +202,7 @@ DataBaseCreation <- function(model = "CRU", country = "BWA") {
     write.csv(BaseDatosRegistros,"BaseDatosRegistros.csv",row.names = FALSE)
     #write.csv(BaseDatosRegistros,"BaseDatosRegistrosBackup.csv",row.names = FALSE)
     #................................................. END ...........................................................
+    setwd(workdir)
     
   }
   else if(model=="CHIRPS"){
@@ -446,8 +428,7 @@ DataBaseCreation <- function(model = "CRU", country = "BWA") {
     write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv", row.names=FALSE)
     #write.csv(BaseDatosEstaciones,"BaseDatosEstacionesBackup.csv", row.names=FALSE)
     #..........................................................END ...........................................
-    
-    
+    setwd(workdir)
   }
   else{
     message("Error selecting the model. Only the options CRU and CHIRPS are available.")
