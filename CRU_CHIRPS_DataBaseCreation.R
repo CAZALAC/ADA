@@ -29,7 +29,7 @@ shape_country <- function(country){
     Boundaries  <- raster::getData('GADM', country=country, level=1)
     #gadm(country=country, level=1, path=tempdir())
   }else{
-    shape=paste0(country,".shp",sep="")
+    shape=paste0("Shape/",country,".shp",sep="")
     BoundariesAFR <- raster::shapefile(shape)
     raster::projection(BoundariesAFR) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
     Boundaries <- BoundariesAFR
