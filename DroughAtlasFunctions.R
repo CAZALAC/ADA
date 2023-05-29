@@ -344,8 +344,21 @@ lm.coeficients <- function (modelobject) {
 
 #server down, check
 #library(geodata)
+#debido a que se llama mucho
+get_country_shape  <- function(country){
+  sf_objet <- sf::st_as_sf(geodata::gadm(country=country, level=0, path=tempdir()))
+  #legacy
+  sf_objet <- as(sf_objet, "Spatial")
+  return(sf_objet)
+}
 
 #Functions =====================================
+country_list <- function(country){
+  ISO.codes=read.csv("CountryISOCodes.csv",sep=";")
+  Afr.country.list=as.character(ISO.codes$ThreeLetter)
+  Afr.country.name=countrycode(Afr.country.list, "iso3c","country.name")
+  return(Afr.country.name)
+}
 #Shape or country boundaries
 shape_country <- function(country){
   # List of countries according to ISO 
@@ -355,7 +368,7 @@ shape_country <- function(country){
   
   # The input and return of variables can be improved 
   if(country %in% Afr.country.list){
-    Boundaries  <- raster::getData('GADM', country=country, level=1)
+    Boundaries  <- get_country_shape(country=country)
     #gadm(country=country, level=1, path=tempdir())
   }else{
     shape=paste0("Shape/",country,".shp",sep="")
@@ -404,7 +417,7 @@ database_creation <- function(model = "CRU", country = "BWA") {
     # Optional Config Setup, Country Code, Shape and raster creation =================
     workdir <- here()
     setwd(workdir)
-    
+    print(workdir)
     # Open CRU nc file --------------------
     nc <- nc_open("cru_ts3.24.01.1901.2015.pre.dat.nc")
     print(nc)
@@ -460,9 +473,9 @@ database_creation <- function(model = "CRU", country = "BWA") {
     
     # DataBase creation for a given country -------------------------
     #Create working directory and set working directory for a given country
-    dir.create(paste0(getwd(),"/",country))# Only the first time and if it has not been created
-    setwd(paste0(getwd(),"/",country))
-    
+    dir.create(paste0("./",country))# Only the first time and if it has not been created
+    setwd(paste0("./",country))
+
     #writeOGR(Boundaries, dsn = '.', layer = country, driver = "ESRI Shapefile",overwrite_layer=TRUE)
     ## S4 method for signature 'Spatial'
     shapefile(Boundaries, filename=country, overwrite=TRUE)
@@ -480,7 +493,7 @@ database_creation <- function(model = "CRU", country = "BWA") {
     country.rts.monthly=rts(country.rts,d)
     country.rts.anual <- apply.yearly(country.rts.monthly, sum)
     plot(mean(country.rts.anual@raster))
-    
+
     #Here a maximum number of stations is defined ======================================
     useful.pixels=length(na.omit(getValues(country.rts[[1]])))
     if(useful.pixels<1000) size=useful.pixels else size=1000
@@ -502,7 +515,7 @@ database_creation <- function(model = "CRU", country = "BWA") {
     #write.csv(BaseDatosEstaciones,"BaseDatosEstacionesBackup.csv",row.names = FALSE)
     
     #Records DataBase Generation ("BaseDatosRegistros.csv") for a given country
-    ppDB=extract(country.rts,data.frame(rs)[,2:3])
+    ppDB=raster::extract(country.rts,data.frame(rs)[,2:3])
     #ppDB.DF <- data.frame(matrix(unlist(ppDB), nrow=size, byrow=F),stringsAsFactors=FALSE)
     ppDB.DF2 <- t(data.frame(matrix(unlist(ppDB), nrow=size, byrow=F),stringsAsFactors=FALSE))
     ppDB.DF2.ts=ts(ppDB.DF2,start=c(1970,1),end=c(2015,12),frequency = 12)

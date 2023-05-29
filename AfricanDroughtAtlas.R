@@ -20,14 +20,16 @@ library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(cor
 library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para mantener orden texto-numero en id_station
 library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
 library(maptools);library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
-library(RSAGA);library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer)
+library(RSAGA);library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
+library(sf)
+
 
 # Config ----------------------
 #Option 1: Replace with the corresponding three ISO letters. In this case, Botswana should be 
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="AfricaDA"
+country="BWA"
 
 
 #  Optinal Config =======================
@@ -54,6 +56,8 @@ database_creation(model="CRU", country = country )
 # II. VARIABLES AND INDICES  CALCULATION --------------
 
 step2_variable_calculation <- function(country = country){
+  #country="BWA"
+  setwd(workdir)
   setwd(paste0("./", country)) #changed slashes
   getwd()  
   shape_name=paste0(country,".shp",sep="")
@@ -453,11 +457,6 @@ output_3 <- regionalization(output_2$BaseDatosEstaciones,output_2$BaseRegistrosP
 # V. L-MOMENTS BASED REGIONAL FREQUENCY ANALYSIS ------------------------------
 
 regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, BaseDatosEstacionesClust, BaseRegistrosPr, z, Hc ){
-  ClustLevels <- output_3$ClustLevels
-  NombreClusters <- output_3$NombreClusters
-  VarInter <-output_3$VarInter
-  BaseDatosEstacionesClust <- output_3$BaseDatosEstacionesClust
-  BaseRegistrosPr <-output_2$BaseRegistrosPr
 # E.1. Create homogeneous regions
 #Incluir linea con ifelse que evalue la dimension de NombresCluster y asigne MaxClusters
 #VarInter="CumSumDec"
@@ -901,13 +900,20 @@ writeSpatialShape(Thiessen, "Thiessen")
 #rsaga.geoprocessor("shapes_points",16,list(POINTS="BaseMPMaskPlot.shp",POLYGONS="Thiessen",FRAME=4))
 getinfo.shape(paste0(country,".shp"))# Este se edita y guarda aparte con SAGA
 getinfo.shape("Thiessen.shp") 
-rsaga.geoprocessor("shapes_polygons",11,list(CLIP=paste0(country,".shp"),
-                                             S_INPUT="Thiessen.shp",
-                                             S_OUTPUT="CutThiessen.shp",
-                                             M_INPUT="Thiessen.shp",
-                                             MULTIPLE=0),display.command=TRUE)
 
+#rsaga.geoprocessor("shapes_polygons",11,list(CLIP=paste0(country,".shp"),
+#                                             S_INPUT="Thiessen.shp",
+#                                             S_OUTPUT="CutThiessen.shp",
+#                                             M_INPUT="Thiessen.shp",
+#                                             MULTIPLE=0),display.command=TRUE)
 
+# update
+pol1  <- st_read(paste0(country,".shp"))
+pol2 <- st_read("Thiessen.shp")
+st_crs(pol2) <- st_crs(pol1)
+
+obj <- st_intersection(pol1, pol2)
+st_write(obj, "CutThiessen.shp",  append=FALSE)
 
 
 #Plot 
@@ -945,17 +951,27 @@ coords =  SpatialPoints(BaseModelMapCor[, c("lon", "lat")],proj4string=CRS("+pro
 plot(CutThiessen,col="blue")
 points(coords,col="red")
 
+
+carpetaADAFolderPredictors = "../../ADAFolderPredictors/"
+#Este es un fix por si se pegaron mal los archivos necesarios
+#solo para evitar errores
+if(length(dir(path = carpetaADAFolderPredictors, all.files=TRUE)) ==0){
+  carpetaADAFolderPredictors =  "../../../ADAFolderPredictors/"
+} else if(length(dir(path = carpetaADAFolderPredictors, all.files=TRUE))){
+  carpetaADAFolderPredictors =  "../ADAFolderPredictors/"
+}
 #Rasterbrick creation with the maps of all predictors
 raster_list<-Predictor   
 rast.list<-list()
-temp.r.l=raster(paste0("../../ADAFolderPredictors/",raster_list[1],".img"))
+temp.r.l=raster(paste0(carpetaADAFolderPredictors,raster_list[1],".img"))
 temp.r.l=crop(temp.r.l,polygons(Boundaries))
 temp.r.l<-mask(temp.r.l,polygons(Boundaries))
 plot(temp.r.l,main="P1")
 rast.list[[1]]=temp.r.l
 Prtrs[,1]=extract(temp.r.l, coords, method='bilinear')
+
 for(l in 2:length(raster_list)){
-  country.raster<-raster(paste0("../../ADAFolderPredictors/",raster_list[l],".img"))
+  country.raster<-raster(paste0(carpetaADAFolderPredictors,raster_list[l],".img"))
   country.raster<-crop(country.raster,polygons(Boundaries))
   country.raster<-mask(country.raster,polygons(Boundaries))
   if(compareRaster(country.raster,temp.r.l)==TRUE){
