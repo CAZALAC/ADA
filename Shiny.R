@@ -104,49 +104,17 @@ server <- function(input, output) {
     } else {
       
       states <- boundariescountry()
-      r <- raster('BWA/Mapas/RP1.tif')
-      r05 <- raster('BWA/Mapas/RP05.tif')
-      r06 <- raster('BWA/Mapas/RP06.tif')
-      r07 <- raster('BWA/Mapas/RP07.tif')
-      r08 <- raster('BWA/Mapas/RP08.tif')
-      r09 <- raster('BWA/Mapas/RP09.tif')
+
       
-      EstQuant_1_in_2yr <- raster('BWA/Mapas/EstQuant_1_in_2yr.tif')
-      EstQuant_1_in_5yr <- raster('BWA/Mapas/EstQuant_1_in_5yr.tif')
-      EstQuant_1_in_10yr <- raster('BWA/Mapas/EstQuant_1_in_10yr.tif')
-      EstQuant_1_in_20yr <- raster('BWA/Mapas/EstQuant_1_in_20yr.tif')
-      EstQuant_1_in_30yr <- raster('BWA/Mapas/EstQuant_1_in_30yr.tif')
-      EstQuant_1_in_40yr <- raster('BWA/Mapas/EstQuant_1_in_40yr.tif')
-      EstQuant_1_in_50yr <- raster('BWA/Mapas/EstQuant_1_in_50yr.tif')
-      EstQuant_1_in_60yr <- raster('BWA/Mapas/EstQuant_1_in_60yr.tif')
-      EstQuant_1_in_70yr <- raster('BWA/Mapas/EstQuant_1_in_70yr.tif')
-      EstQuant_1_in_80yr <- raster('BWA/Mapas/EstQuant_1_in_80yr.tif')
-      EstQuant_1_in_90yr <- raster('BWA/Mapas/EstQuant_1_in_90yr.tif')
-      EstQuant_1_in_100yr <- raster('BWA/Mapas/EstQuant_1_in_100yr.tif')
-      
-      EstQuant_1_in_2yr
       m <- leaflet() %>%addTiles() %>%
         addPolygons(data= states, color = "#444444", weight = 1, smoothFactor = 0.5,
                     opacity = 0.5, fillOpacity = 0,
                     highlightOptions = highlightOptions(color = "white", weight = 2,
                                                         bringToFront = TRUE), group = "Boundaries") %>%
-        addRasterImage(r, colors = "Spectral", opacity = 0.8, group = "RP1") %>%
-        addRasterImage(r05, colors = "Spectral", opacity = 0.8, group = "RP05") %>%
-        addRasterImage(r06, colors = "Spectral", opacity = 0.8, group = "RP06") %>%
-        addRasterImage(r07, colors = "Spectral", opacity = 0.8, group = "RP07") %>%
-        addRasterImage(r08, colors = "Spectral", opacity = 0.8, group = "RP08") %>%
-        addRasterImage(r09, colors = "Spectral", opacity = 0.8, group = "RP09") %>%
         
-        
-        addRasterImage(EstQuant_1_in_2yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_2yr") %>%
-        addRasterImage(EstQuant_1_in_5yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_5yr") %>%
-        addRasterImage(EstQuant_1_in_10yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_10yr") %>%
-        addRasterImage(EstQuant_1_in_50yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_50yr") %>%
-        addRasterImage(EstQuant_1_in_90yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_90yr") %>%
-
         
         addLayersControl(
-          overlayGroups = c("Boundaries","RP1","RP05","RP06","RP07","RP08","RP09","EstQuant_1_in_2yr", "EstQuant_1_in_5yr", "EstQuant_1_in_10yr","EstQuant_1_in_50yr","EstQuant_1_in_90yr"  ),
+          overlayGroups = c("Boundaries"),
           options = layersControlOptions(collapsed = FALSE)
         )
       
@@ -294,13 +262,60 @@ server <- function(input, output) {
     period_mapping(output4$ResumeTable, output5$BaseModelMapCor, countryiso, output_2$Boundaries)
     remove_modal_spinner()
     
+    show_modal_spinner(text=paste0("plotting... ",input$ddata," with name ", countryiso )) # show the modal window
+    
     states2 <- sf::st_read("randomsample.shp")
+    r <- raster('Mapas/RP1.tif')
+    r05 <- raster('Mapas/RP05.tif')
+    r06 <- raster('Mapas/RP06.tif')
+    r07 <- raster('Mapas/RP07.tif')
+    r08 <- raster('Mapas/RP08.tif')
+    r09 <- raster('Mapas/RP09.tif')
+    
+    EstQuant_1_in_2yr <- raster('Mapas/EstQuant_1_in_2yr.tif')
+    EstQuant_1_in_5yr <- raster('Mapas/EstQuant_1_in_5yr.tif')
+    EstQuant_1_in_10yr <- raster('Mapas/EstQuant_1_in_10yr.tif')
+    EstQuant_1_in_20yr <- raster('Mapas/EstQuant_1_in_20yr.tif')
+    EstQuant_1_in_30yr <- raster('Mapas/EstQuant_1_in_30yr.tif')
+    EstQuant_1_in_40yr <- raster('Mapas/EstQuant_1_in_40yr.tif')
+    EstQuant_1_in_50yr <- raster('Mapas/EstQuant_1_in_50yr.tif')
+    EstQuant_1_in_60yr <- raster('Mapas/EstQuant_1_in_60yr.tif')
+    EstQuant_1_in_70yr <- raster('Mapas/EstQuant_1_in_70yr.tif')
+    EstQuant_1_in_80yr <- raster('Mapas/EstQuant_1_in_80yr.tif')
+    EstQuant_1_in_90yr <- raster('Mapas/EstQuant_1_in_90yr.tif')
+    EstQuant_1_in_100yr <- raster('Mapas/EstQuant_1_in_100yr.tif')
+    
     leafletProxy("map") %>%  addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
-      # Layers control
-      addLayersControl(
-        overlayGroups = c("Boundaries","Step 1"),
-        options = layersControlOptions(collapsed = FALSE)
-      )
+    
+      addRasterImage(r, colors = "Spectral", opacity = 0.8, group = "RP1") %>%
+      addRasterImage(r05, colors = "Spectral", opacity = 0.8, group = "RP05") %>%
+      addRasterImage(r06, colors = "Spectral", opacity = 0.8, group = "RP06") %>%
+      addRasterImage(r07, colors = "Spectral", opacity = 0.8, group = "RP07") %>%
+      addRasterImage(r08, colors = "Spectral", opacity = 0.8, group = "RP08") %>%
+      addRasterImage(r09, colors = "Spectral", opacity = 0.8, group = "RP09") %>%
+      addRasterImage(r, colors = "Spectral", opacity = 0.8, group = "RP1") %>%
+      addRasterImage(r05, colors = "Spectral", opacity = 0.8, group = "RP05") %>%
+      addRasterImage(r06, colors = "Spectral", opacity = 0.8, group = "RP06") %>%
+      addRasterImage(r07, colors = "Spectral", opacity = 0.8, group = "RP07") %>%
+      addRasterImage(r08, colors = "Spectral", opacity = 0.8, group = "RP08") %>%
+      addRasterImage(r09, colors = "Spectral", opacity = 0.8, group = "RP09") %>%
+      
+      
+      addRasterImage(EstQuant_1_in_2yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_2yr") %>%
+      addRasterImage(EstQuant_1_in_5yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_5yr") %>%
+      addRasterImage(EstQuant_1_in_10yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_10yr") %>%
+      addRasterImage(EstQuant_1_in_50yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_50yr") %>%
+      addRasterImage(EstQuant_1_in_90yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_90yr") %>%
+      
+      
+      
+    addLayersControl(
+      overlayGroups = c("Boundaries","Step 1", "RP1","RP05","RP06","RP07","RP08","RP09","EstQuant_1_in_2yr", "EstQuant_1_in_5yr", "EstQuant_1_in_10yr","EstQuant_1_in_50yr","EstQuant_1_in_90yr"  ),
+      options = layersControlOptions(collapsed = FALSE)
+    )
+    
+    remove_modal_spinner()
+    
     
   })
 
