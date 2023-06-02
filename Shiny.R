@@ -2,10 +2,21 @@ library(shiny)
 library(leaflet)
 library(shinybusy)
 library(shinyjs)
+library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
+library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(corrplot);library(sqldf)
+library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para mantener orden texto-numero en id_station
+library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
+library(maptools);library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
+library(RSAGA);library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
+library(sf)
+workdir <- here()
+setwd(workdir)
+
 source('DroughAtlasFunctions.R')
-source("DAF_temporal.R")
+
 country_list <- country_list()
 datadownload <- c("CRU","CHIRPS")
+
 # ui object
 ui <- fluidPage(
 
@@ -29,7 +40,10 @@ ui <- fluidPage(
                  actionButton(inputId = "Runs2", label = "Run Step 2"),
                  actionButton(inputId = "Runs3", label = "Run Step 3"),
                  actionButton(inputId = "Runs4", label = "Run Step 4"),
-                 actionButton(inputId = "Runs5", label = "Run ALL"),
+                 actionButton(inputId = "Runs5", label = "Run Step 5"),
+                 actionButton(inputId = "Runs6", label = "Run Step 6"),
+                 
+                 actionButton(inputId = "RunsA", label = "Run ALL"),
                  useShinyjs(),
                  actionButton("refresh", "Refresh"),
 
@@ -58,9 +72,7 @@ ui <- fluidPage(
                  ),
                  tags$h5("or"),
                  selectInput("icountry_list2", "Select a Country", country_list),
-                 actionButton(inputId = "Runs6", label = "Load Data")
-                 
-                 
+                 actionButton(inputId = "RunsV", label = "Load Data")
                  
                ),
                
@@ -71,7 +83,29 @@ ui <- fluidPage(
                  
                )
              ) ),
-    
+    tabPanel("Config", 
+             
+             sidebarLayout(
+               sidebarPanel(
+                 fileInput(
+                   inputId = "filemap3",
+                   label = "Upload map. Choose shapefile",
+                   multiple = TRUE,
+                   accept = c(".shp", ".dbf", ".sbn", ".sbx", ".shx", ".prj")
+                 ),
+                 tags$h5("or"),
+                 selectInput("icountry_list4", "Select a Country", country_list),
+                 actionButton(inputId = "Runs44", label = "Load Data")
+                 
+               ),
+               
+               mainPanel(
+                 #plotOutput("mapPlot"),
+                 #plotOutput("mapPlot2"),
+                 #leafletOutput("map2")
+                 
+               )
+             ) ),
     
 
     
@@ -269,27 +303,32 @@ server <- function(input, output) {
   })
   
   
+  
+  Output_f2 = reactiveVal()
+  Output_f3 = reactiveVal()
+  
+  
   observeEvent(input$Runs1, {
+    
+    if(length(input$filemap) > 1 )
       
-      if(length(input$filemap) > 1 )
+    {
+      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+      req(input$filemap)
+      shpdf <- input$filemap
+      tempdirname <- dirname(shpdf$datapath[1])
       
-        {
-        countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-        req(input$filemap)
-        shpdf <- input$filemap
-        tempdirname <- dirname(shpdf$datapath[1])
-        
-        # Rename files
-        for (i in 1:nrow(shpdf)) {
-          file.rename(
-            shpdf$datapath[i],
-            paste0(tempdirname, "/", shpdf$name[i])
-          )
-        }
-        
-        countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
-        countryiso = tools::file_path_sans_ext(countryiso)
-        
+      # Rename files
+      for (i in 1:nrow(shpdf)) {
+        file.rename(
+          shpdf$datapath[i],
+          paste0(tempdirname, "/", shpdf$name[i])
+        )
+      }
+      
+      countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
+      countryiso = tools::file_path_sans_ext(countryiso)
+      
     }
     else{
       countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
@@ -300,15 +339,14 @@ server <- function(input, output) {
     remove_modal_spinner() # remove it when done
     states2 <- sf::st_read(paste(countryiso,"randomsample.shp",sep = "/"))
     leafletProxy("map") %>%  addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
-    # Layers control
+      # Layers control
       addLayersControl(
         overlayGroups = c("Boundaries","Step 1"),
         options = layersControlOptions(collapsed = FALSE)
       )
-
+    
   })
-  Output_f2 = reactiveVal()
-  Output_f3 = reactiveVal()
+  
   
   observeEvent(input$Runs2, {
     
@@ -353,8 +391,10 @@ server <- function(input, output) {
      # )
     
   })
- 
   observeEvent(input$Runs5, {
+  
+    })
+  observeEvent(input$RunsA, {
     
     if(length(input$filemap) > 1 )
       
@@ -395,7 +435,7 @@ server <- function(input, output) {
     
     show_modal_spinner(text=paste0("Step 4 ",input$ddata," with name ", countryiso )) # show the modal window
     
-    output4 <- regional_frequency_analysis(output_3$ClustLevels,output_3$NombreClusters,output_3$VarInter, output_3$BaseDatosEstacionesClust, output_2$BaseRegistrosPr, output_2$z,output_3$Hc)
+    output4 <- regional_frequency_analysis(output_3$ClustLevels,output_3$NombreClusters,output_3$VarInter, output_3$BaseDatosEstacionesClust, output_2$BaseRegistrosPr, output_2$z,output_3$Hc, countryiso)
     remove_modal_spinner()
     
     show_modal_spinner(text=paste0("Step 5 ",input$ddata," with name ", countryiso )) # show the modal window
@@ -461,7 +501,7 @@ server <- function(input, output) {
   
   
   
-  observeEvent(input$Runs6, {
+  observeEvent(input$RunsV, {
     
     if(length(input$filemap2) > 1 )
       
@@ -616,7 +656,7 @@ server <- function(input, output) {
       countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
     }
     #output4 <- regional_frequency_analysis(output_3$ClustLevels,output_3$NombreClusters,output_3$VarInter, output_3$BaseDatosEstacionesClust, output_2$BaseRegistrosPr, output_2$z,output_3$Hc)
-    show_modal_spinner(text=paste0("Step 4: Woring in FREQUENCY/QUANTIL/RETURN PERIOD ESTIMATIONWorking in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
+    show_modal_spinner(text=paste0("Step 4: Working in FREQUENCY/QUANTIL/RETURN PERIOD ESTIMATIONWorking in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
     output_3_input <- Output_f2()
     output_4_input <- Output_f3()
     regional_frequency_analysis(output_4_input$ClustLevels,output_4_input$NombreClusters,output_4_input$VarInter, output_4_input$BaseDatosEstacionesClust, output_3_input$BaseRegistrosPr, output_3_input$z,output_3_input$Hc)
