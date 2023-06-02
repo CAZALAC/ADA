@@ -373,21 +373,24 @@ shape_country <- function(country){
   }else{
     shape=paste0("Shape/",country,".shp",sep="")
     BoundariesAFR <- raster::shapefile(shape)
-    raster::projection(BoundariesAFR) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
+    #el script funciona con lonlat
+    try(BoundariesAFR <- spTransform(BoundariesAFR, "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"), silent = TRUE)
+    #por si el archivo viene sin prj
+    try(raster::projection(BoundariesAFR) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
     Boundaries <- BoundariesAFR
   }
   Bound.Pol = extent(Boundaries)
-  if(Bound.Pol[1]>0) xmin=Bound.Pol[1]*0.95 else xmin=Bound.Pol[1]*1.05
-  if(Bound.Pol[2]>0) xmax=Bound.Pol[2]*1.05 else xmax=Bound.Pol[2]*0.95
-  if(Bound.Pol[3]>0) ymin=Bound.Pol[3]*0.95 else ymin=Bound.Pol[3]*1.05
-  if(Bound.Pol[4]>0) ymax=Bound.Pol[4]*1.05 else ymax=Bound.Pol[4]*0.95
+  if(Bound.Pol[1]>0) xmin=Bound.Pol[1]*0.5 else xmin=Bound.Pol[1]*1.5
+  if(Bound.Pol[2]>0) xmax=Bound.Pol[2]*1.5 else xmax=Bound.Pol[2]*0.5
+  if(Bound.Pol[3]>0) ymin=Bound.Pol[3]*0.5 else ymin=Bound.Pol[3]*1.5
+  if(Bound.Pol[4]>0) ymax=Bound.Pol[4]*1.5 else ymax=Bound.Pol[4]*0.5
   x_coord <- c(xmin, xmax, xmax, xmin)
   y_coord <- c(ymin, ymin, ymax, ymax)
   xym <- cbind(x_coord, y_coord)
   p <- Polygon(xym)
   ps <- Polygons(list(p),1)
   sps <- SpatialPolygons(list(ps))
-  proj4string(sps) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+  try(proj4string(sps) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") , silent = TRUE)
   return(list("Boundaries" = Boundaries, "sps" = sps))
 }
 #Zero correction
@@ -413,6 +416,7 @@ randomSample = function(df,n) {
 
 database_creation <- function(model = "CRU", country = "BWA") {
   # BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
+  # debug: model = "CRU"; country = "Huasco"
   if(model=="CRU"){
     # Optional Config Setup, Country Code, Shape and raster creation =================
     workdir <- here()
@@ -434,7 +438,7 @@ database_creation <- function(model = "CRU", country = "BWA") {
     # Just for Africa
     #xmin=lon[300];xmax=lon[300+213];ymin=lat[90];ymax=lat[90+183]
     #New version
-    xmin= -180;xmax= 180;ymin= -180;ymax= 180
+    xmin=min(lon);xmax=max(lon);ymin=min(lat);ymax=max(lat)
     
     # Create rasterstack with precipitation layers ==================
     pre.layers<-raster::stack()
@@ -444,20 +448,20 @@ database_creation <- function(model = "CRU", country = "BWA") {
       crs(r.pre) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
       pre.layers<-stack(pre.layers,r.pre)
     }
-    
-    
+    plot(pre.layers)
+
     #Crop and mask rasterstack with continent boundaries ==========
     dummyreturn <- shape_country(country)
     Boundaries <- dummyreturn$Boundaries
     sps <- dummyreturn$sps
     rm(dummyreturn)
-    
     #BoundariesAFR=readOGR("AfricaDA.shp") #from http://www.maplibrary.org/library/stacks/Africa/index.htm
     pre.monthly.AFR=mask(pre.layers,polygons(sps))
     pre.monthly.AFR=crop(pre.layers,polygons(sps))
+ 
     plot(pre.monthly.AFR[[1]])
     class(pre.monthly.AFR)
-    
+#    writeRaster(pre.monthly.AFR, 'testo.tif')
     # Rasterstack time series creation with monthly data  ================
     d= time.index[seq(829,length.out=dim(pre$z)[3])]
     nlayers(pre.layers)==length(d)
@@ -488,19 +492,22 @@ database_creation <- function(model = "CRU", country = "BWA") {
     plot(Boundaries)
     
     #Stations Database Generacion (BaseDatosEstaciones) for a given country ============
-    country.rts=crop(pre.monthly.AFR,Boundaries)
-    country.rts=mask(country.rts,Boundaries)
+    #country.rts=crop(pre.monthly.AFR,Boundaries)
+    #porque asi evito pedazos del area sin estaciones en mallas gruesas
+    country.rts=crop(pre.monthly.AFR,sps)
+    country.rts=mask(country.rts,sps)
     country.rts.monthly=rts(country.rts,d)
     country.rts.anual <- apply.yearly(country.rts.monthly, sum)
     plot(mean(country.rts.anual@raster))
 
     #Here a maximum number of stations is defined ======================================
+    
     useful.pixels=length(na.omit(getValues(country.rts[[1]])))
     if(useful.pixels<1000) size=useful.pixels else size=1000
     
     rs=sampleRandom(country.rts[[1]], cells=TRUE,xy=TRUE,size=size,sp=TRUE)
     points(rs,col="red")
-    
+    plot(rs)
     #writeOGR(obj=rs, dsn=getwd(),layer="randomsample", driver="ESRI Shapefile",overwrite_layer=TRUE)
     shapefile(rs, filename="randomsample", overwrite=TRUE)
     

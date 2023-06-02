@@ -22,16 +22,18 @@ library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library
 library(maptools);library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
 library(RSAGA);library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
 library(sf)
+
+
 # Config ----------------------
 #Option 1: Replace with the corresponding three ISO letters. In this case, Botswana should be 
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="BWA"
+country="AfricaDA"
 
 
 #  Optinal Config =======================
-#workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
+#workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA3/ADA/"
 workdir <- here()
 setwd(workdir)
 
@@ -249,10 +251,11 @@ step2_variable_calculation <- function(country = country){
   BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosIndices,by="id_station") # Ac? uno las dos bases de datos a nivel de estaciones solamente, no de todos los registros. Contiene los valores medios
   
   #Here an updated version of Stations DataBase is saved
-  write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",row.names=FALSE)
+  #p.rojas: eliminado para mejorar la velocidad
+  #write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",row.names=FALSE)
   #remove(BaseDatosEstaciones)
   #BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T,sep=",")
-  head(BaseDatosEstaciones,5)
+  #head(BaseDatosEstaciones,5)
   
   #...................................................................................................................
   #                                     Trend, serial correlation, Mann-Kendall and Sen slope calculation
@@ -337,7 +340,7 @@ step2_variable_calculation <- function(country = country){
   
   # Here an updated version of Stations DataBase is saved
   BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosTendenciaDW,by="id_station") # Ac? uno las dos bases de datos a nivel de estaciones solamente.
-  write.csv(BaseDatosEstaciones,  "BaseDatosEstaciones.csv", row.names=FALSE)
+  write.csv(BaseDatosEstaciones,  "BaseDatosEstaciones_output.csv", row.names=FALSE)
   #rm(BaseDatosEstaciones)
   #BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T, sep=",")
   head(BaseDatosEstaciones,5) #Hasta el final del Block II, el script se ejecuta de forma normal, salvo pequeños ajustes.
@@ -894,24 +897,28 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
   #### REVISSAR
   ###########################
   ##########################
-  writeSpatialShape(Thiessen, "Thiessen")
+  writeSpatialShape(Thiessen, "Thiessen.shp")
   #rsaga.geoprocessor("shapes_points",16,list(POINTS="BaseMPMaskPlot.shp",POLYGONS="Thiessen",FRAME=4))
   getinfo.shape(paste0(country,".shp"))# Este se edita y guarda aparte con SAGA
   getinfo.shape("Thiessen.shp") 
   
-  #rsaga.geoprocessor("shapes_polygons",11,list(CLIP=paste0(country,".shp"),
-  #                                             S_INPUT="Thiessen.shp",
-  #                                             S_OUTPUT="CutThiessen.shp",
-  #                                             M_INPUT="Thiessen.shp",
-  #                                             MULTIPLE=0),display.command=TRUE)
+  rsaga.geoprocessor("shapes_polygons",11,list(CLIP=paste0(country,".shp"),
+                                               S_INPUT="Thiessen.shp",
+                                               S_OUTPUT="CutThiessen.shp",
+                                               M_INPUT="Thiessen.shp",
+                                               MULTIPLE=0),display.command=TRUE)
   
   # update
-  pol1  <- st_read(paste0(country,".shp"))
-  pol2 <- st_read("Thiessen.shp")
-  st_crs(pol2) <- st_crs(pol1)
-  
-  obj <- st_intersection(pol1, pol2)
-  st_write(obj, "CutThiessen.shp",  append=FALSE)
+  #pol1  <- st_read(paste0(country,".shp"))
+  #try(pol1 <- spTransform(as(pol1,"Spatial"), "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"), silent = TRUE)
+  #pol1  <- st_crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
+  #pol1  <- raster::shapefile(paste0(country,".shp"))
+  #pol2 <- st_read("Thiessen.shp")
+  #st_crs(pol2) <- st_crs(pol1)
+  #plot(pol2)
+  #plot(obj)
+  #obj <- raster::intersect(pol1, pol2)
+  #sf::st_write(obj, "CutThiessen.shp",  append=FALSE)
   
   
   #Plot 

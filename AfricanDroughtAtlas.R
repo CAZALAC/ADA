@@ -33,7 +33,7 @@ country="BWA"
 
 
 #  Optinal Config =======================
-#workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA/"
+#workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA3/ADA/"
 workdir <- here()
 setwd(workdir)
 
@@ -251,10 +251,11 @@ step2_variable_calculation <- function(country = country){
   BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosIndices,by="id_station") # Ac? uno las dos bases de datos a nivel de estaciones solamente, no de todos los registros. Contiene los valores medios
   
   #Here an updated version of Stations DataBase is saved
-  write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",row.names=FALSE)
+  #p.rojas: eliminado para mejorar la velocidad
+  #write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",row.names=FALSE)
   #remove(BaseDatosEstaciones)
   #BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T,sep=",")
-  head(BaseDatosEstaciones,5)
+  #head(BaseDatosEstaciones,5)
   
   #...................................................................................................................
   #                                     Trend, serial correlation, Mann-Kendall and Sen slope calculation
@@ -339,7 +340,7 @@ step2_variable_calculation <- function(country = country){
   
   # Here an updated version of Stations DataBase is saved
   BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosTendenciaDW,by="id_station") # Ac? uno las dos bases de datos a nivel de estaciones solamente.
-  write.csv(BaseDatosEstaciones,  "BaseDatosEstaciones.csv", row.names=FALSE)
+  write.csv(BaseDatosEstaciones,  "BaseDatosEstaciones_output.csv", row.names=FALSE)
   #rm(BaseDatosEstaciones)
   #BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T, sep=",")
   head(BaseDatosEstaciones,5) #Hasta el final del Block II, el script se ejecuta de forma normal, salvo pequeños ajustes.
@@ -511,7 +512,7 @@ for (k in 1:length(NombreClusters)){# Start for loop
   TotalEstaciones<-sum(N)
   
   print(paste("The total number of analyzed stations is: ",TotalEstaciones,sep=""))
-  print (paste(" from ",length(levels(BaseDatosEstacionesClust$id_station)),"  available stations in BaseCompletaIII",sep=""))
+  print (paste("from ",length(levels(BaseDatosEstacionesClust$id_station))," available stations in BaseCompletaIII",sep=""))
   
   # E.3. Regionalization
   Regiones<-length(BaseRegiones)
@@ -896,7 +897,7 @@ plot(Thiessen)
 #### REVISSAR
 ###########################
 ##########################
-writeSpatialShape(Thiessen, "Thiessen")
+writeSpatialShape(Thiessen, "Thiessen.shp")
 #rsaga.geoprocessor("shapes_points",16,list(POINTS="BaseMPMaskPlot.shp",POLYGONS="Thiessen",FRAME=4))
 getinfo.shape(paste0(country,".shp"))# Este se edita y guarda aparte con SAGA
 getinfo.shape("Thiessen.shp") 
@@ -908,12 +909,15 @@ getinfo.shape("Thiessen.shp")
 #                                             MULTIPLE=0),display.command=TRUE)
 
 # update
-pol1  <- st_read(paste0(country,".shp"))
-pol2 <- st_read("Thiessen.shp")
+#pol1  <- st_read(paste0(country,".shp"))
+pol1  <- raster::shapefile(paste0(country,".shp"))
+try(pol1 <- spTransform(as(pol1,"Spatial"), "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"), silent = TRUE)
+pol1  <- st_crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
+pol2  <- st_read("Thiessen.shp")
 st_crs(pol2) <- st_crs(pol1)
 
-obj <- st_intersection(pol1, pol2)
-st_write(obj, "CutThiessen.shp",  append=FALSE)
+obj <- raster::intersect(pol1, pol2)
+writeSpatialShape(obj, "CutThiessen.shp")
 
 
 #Plot 
