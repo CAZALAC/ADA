@@ -438,6 +438,8 @@ server <- function(input, output) {
     else{
       countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
     }
+    oldwd <- getwd()
+    
     show_modal_spinner(text=paste0("Step 1 ",input$ddata," with name ", countryiso )) # show the modal window
     # show the modal window
     database_creation(model=input$ddata, country = countryiso, clip_method = input$clipping  )

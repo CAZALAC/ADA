@@ -28,7 +28,7 @@ library(sf);library(circular);library(reshape)
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="BWA"
+country="AfricaDA"
 
 
 #  Optinal Config =======================
@@ -39,11 +39,6 @@ setwd(workdir)
 
 # Load Functions -------------------
 source('DroughAtlasFunctions.R')
-
-# Test -------------------
-rsaga.env()
-rsaga.get.version()
-
 
 # I. DATABASE CONSTRUCTION ------------
 # Block i.a. database construction from CRU 3.21 or CHIRPS

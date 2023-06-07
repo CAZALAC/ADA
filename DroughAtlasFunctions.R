@@ -1628,7 +1628,6 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
                                     grep('EstQuant',names(BaseModelMapMask)))]
   coordinates(BaseMPMaskPlot)= c("lon","lat")
   writeSpatialShape(BaseMPMaskPlot, "BaseMPMaskPlot")
-  
   #OPcion Thiessen con Voronoi dentro de R
   Thiessen <- voronoipolygons(BaseMPMaskPlot)
   
@@ -1653,9 +1652,12 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
   #                                             M_INPUT="Thiessen.shp",
   #                                             MULTIPLE=0),display.command=TRUE)
   
-  # update
+  # update country="AfricaDA"
   pol1  <- raster::shapefile(paste0(country,".shp"))
+  #por si el archivo viene sin prj
   pol2  <- raster::shapefile("Thiessen.shp")
+  raster::crs(pol2) <- raster::crs(pol1)
+  #terra::crop(pol1,pol2)
   obj <- raster::intersect(pol1, pol2)
   writeSpatialShape(obj, "CutThiessen.shp")
    
