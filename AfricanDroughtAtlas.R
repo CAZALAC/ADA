@@ -10,8 +10,8 @@
 ## Email: hmaureria@cazalac.org
 ## -------------------------------------------------
 ## Notes: 
-##        
-##        -THIS TRY IS WITH REG ADAPT WITHOUT MODIFIERS
+## - CRU data from: http://data.ceda.ac.uk/badc/cru/data/cru_ts/cru_ts_3.21/data/pre/cru_ts3.21.1921.1930.pre.dat.gz
+## - CHIRPS data from IRIDL: http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/
 ##################################################
 
 # Libraries ----------------------
@@ -64,7 +64,7 @@ output_3 <- regionalization(output_2$BaseDatosEstaciones,output_2$BaseRegistrosP
 
 # IV: EXPLORATORY DATA ANALYSIS (OPTIONAL) #                                     #
 
-exploratory(BaseDatosEstacionesClust = output4$BaseDatosEstacionesClust, country = country, VarInter="CumSumDec")
+exploratory(BaseDatosEstacionesClust = output_3$BaseDatosEstacionesClust, country = country, VarInter="CumSumDec")
 
 # V. L-MOMENTS BASED REGIONAL FREQUENCY ANALYSIS ------------------------------
 

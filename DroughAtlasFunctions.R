@@ -1,5 +1,18 @@
-#DroughtAtlasFunctions
-#AfricanDroughtAtlas2018v2 17/10/2018
+##################################################
+## -------------------------------------------------
+## Project: AfricanDroughtAtlas
+## Script purpose: Functions to create Stations and Records DataBases from CRU and CHIRPS
+## Updated: 09-05-2023
+## Date Created: 17-10-2018
+## Author 1: J. Nuñez
+## Author 2: H. Maureria
+## Author 3: P. Rojas
+## Email: hmaureria@cazalac.org
+## -------------------------------------------------
+## Notes:
+## - CRU data from: http://data.ceda.ac.uk/badc/cru/data/cru_ts/cru_ts_3.21/data/pre/cru_ts3.21.1921.1930.pre.dat.gz
+##       
+##################################################
 
 #Funcion 1. Parameters estimation for the Gaucho distribution model
 pelgau=function (x) 
@@ -327,20 +340,6 @@ lm.coeficients <- function (modelobject) {
   return(salida)}
 
 
-##################################################
-## -------------------------------------------------
-## Project: AfricanDroughtAtlas
-## Script purpose: Functions to create Stations and Records DataBases from CRU and CHIRPS
-## Date Created: 09-05-2023
-## Author 1: J. Nuñez
-## Author 2: H. Maureria
-## Author 3: P. Rojas
-## Email: hmaureria@cazalac.org
-## -------------------------------------------------
-## Notes:
-## - CRU data from: http://data.ceda.ac.uk/badc/cru/data/cru_ts/cru_ts_3.21/data/pre/cru_ts3.21.1921.1930.pre.dat.gz
-##       
-##################################################
 
 #server down, check
 #library(geodata)
@@ -624,7 +623,7 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Shape
     #After download, put the file into the country's folder.
     # Download netCDF file
     url=paste0('http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/.daily-improved/.global/.0p25/.prcp/X/',xmin,'/',xmax,'/RANGEEDGES/Y/',ymin,'/',ymax,'/RANGEEDGES/T/(Jan%201981)/(Dec%202016)/RANGE/weeklytomonthly/data.nc')
-    dfile=c("data.nc")
+    dfile=c("data.nc")      
     print(url)
     #Additional time for slow connections and if DL takes time to process
     options(timeout = max(6000, getOption("timeout")))
@@ -1645,8 +1644,8 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
   ##########################
   writeSpatialShape(Thiessen, "Thiessen.shp")
   #rsaga.geoprocessor("shapes_points",16,list(POINTS="BaseMPMaskPlot.shp",POLYGONS="Thiessen",FRAME=4))
-  getinfo.shape(paste0(country,".shp"))# Este se edita y guarda aparte con SAGA
-  getinfo.shape("Thiessen.shp") 
+  #getinfo.shape(paste0(country,".shp"))# Este se edita y guarda aparte con SAGA
+  #getinfo.shape("Thiessen.shp") 
   
   #rsaga.geoprocessor("shapes_polygons",11,list(CLIP=paste0(country,".shp"),
   #                                             S_INPUT="Thiessen.shp",

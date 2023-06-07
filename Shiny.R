@@ -448,31 +448,31 @@ server <- function(input, output) {
     showNotification(paste("Stations:",length(unique(stations$id_station)), " stations detected!"))
     
     show_modal_spinner(text=paste0("Step 2 ",input$ddata," with name ", countryiso )) # show the modal window
-    
     output_2 <- step2_variable_calculation(country =  countryiso)
     remove_modal_spinner()
+    
     show_modal_spinner(text=paste0("Step 3 ",input$ddata," with name ", countryiso )) # show the modal window
-    
     output_3 <- regionalization(output_2$BaseDatosEstaciones,output_2$BaseRegistrosPr)
+    remove_modal_spinner()
     
+    show_modal_spinner(text=paste0("Exploratory Step ",input$ddata," with name ", countryiso )) # show the modal window
+    exploratory(BaseDatosEstacionesClust = output_3$BaseDatosEstacionesClust, country = countryiso, VarInter="CumSumDec")
     remove_modal_spinner()
     
     show_modal_spinner(text=paste0("Step 4 ",input$ddata," with name ", countryiso )) # show the modal window
-    
     output4 <- regional_frequency_analysis(output_3$ClustLevels,output_3$NombreClusters,output_3$VarInter, output_3$BaseDatosEstacionesClust, output_2$BaseRegistrosPr, output_2$z,output_3$Hc, countryiso)
     remove_modal_spinner()
     
     show_modal_spinner(text=paste0("Step 5 ",input$ddata," with name ", countryiso )) # show the modal window
-    
     output5 <- period_estimation(output4$BaseSummaryStatistics, output4$BaseDatosEstacionesClust, output4$BaseBaseRegiones, output4$ResumeTable, output4$BaseMediaCompleta, output4$BaseProporCeros, output4$Basep0bias, output4$Baserfitdist, output4$Baserfitpara)
     remove_modal_spinner()
     
     show_modal_spinner(text=paste0("mapping... ",input$ddata," with name ", countryiso )) # show the modal window
-    
     period_mapping(output4$ResumeTable, output5$BaseModelMapCor, countryiso, output_2$Boundaries)
     remove_modal_spinner()
     
-    show_modal_spinner(text=paste0("plotting... ",input$ddata," with name ", countryiso )) # show the modal window
+    
+    show_modal_spinner(text=paste0("plotting... ", countryiso )) # show the modal window
     
     states2 <- sf::st_read("randomsample.shp")
     r <- raster('Mapas/RP1.tif')
@@ -481,6 +481,16 @@ server <- function(input, output) {
     r07 <- raster('Mapas/RP07.tif')
     r08 <- raster('Mapas/RP08.tif')
     r09 <- raster('Mapas/RP09.tif')
+    
+    
+    #rp legend colors
+    minrp <- min(c(r@data@min,r05@data@min,r06@data@min,r07@data@min,r08@data@min,r09@data@min))
+    maxrp <- max(c(r@data@max,r05@data@max,r06@data@max,r07@data@max,r08@data@max,r09@data@max))
+    rangodatos <- seq(minrp,maxrp,length.out=15)
+    pal <- colorNumeric("Blues", rangodatos,
+                        na.color = "transparent")
+    
+    
     
     EstQuant_1_in_2yr <- raster('Mapas/EstQuant_1_in_2yr.tif')
     EstQuant_1_in_5yr <- raster('Mapas/EstQuant_1_in_5yr.tif')
@@ -495,29 +505,59 @@ server <- function(input, output) {
     EstQuant_1_in_90yr <- raster('Mapas/EstQuant_1_in_90yr.tif')
     EstQuant_1_in_100yr <- raster('Mapas/EstQuant_1_in_100yr.tif')
     
+    
+    #rp legend colors
+    minrp2 <- min(c(EstQuant_1_in_2yr@data@min,EstQuant_1_in_5yr@data@min,EstQuant_1_in_10yr@data@min,EstQuant_1_in_20yr@data@min,EstQuant_1_in_30yr@data@min,EstQuant_1_in_40yr@data@min,EstQuant_1_in_50yr@data@min,EstQuant_1_in_60yr@data@min,EstQuant_1_in_70yr@data@min,EstQuant_1_in_80yr@data@min,EstQuant_1_in_90yr@data@min,EstQuant_1_in_100yr@data@min))
+    maxrp2 <- max(c(EstQuant_1_in_2yr@data@max,EstQuant_1_in_5yr@data@max,EstQuant_1_in_10yr@data@max,EstQuant_1_in_20yr@data@max,EstQuant_1_in_30yr@data@max,EstQuant_1_in_40yr@data@max,EstQuant_1_in_50yr@data@max,EstQuant_1_in_60yr@data@max,EstQuant_1_in_70yr@data@max,EstQuant_1_in_80yr@data@max,EstQuant_1_in_90yr@data@max,EstQuant_1_in_100yr@data@max))
+    rangodatos2 <- seq(minrp2,maxrp2,length.out=5)
+    pal2 <- colorNumeric("YlOrRd", rangodatos2,
+                         na.color = "transparent")
+    
+    
+    
     leafletProxy("map") %>%  addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
+      
+      addRasterImage(r, colors = pal, opacity = 0.8, group = "RP1") %>%
+      leaflet::addLegend(pal = pal, values = rangodatos,
+                         title = "RP",   position = "bottomleft") %>%
+      leaflet::addLegend(pal = pal2, values = rangodatos2,
+                         title = "EstQuant",   position = "bottomright") %>%
+      addRasterImage(r05, colors = pal, opacity = 0.8, group = "RP05") %>%
+      addRasterImage(r06, colors = pal, opacity = 0.8, group = "RP06") %>%
+      addRasterImage(r07, colors = pal, opacity = 0.8, group = "RP07") %>%
+      addRasterImage(r08, colors = pal, opacity = 0.8, group = "RP08") %>%
+      addRasterImage(r09, colors = pal, opacity = 0.8, group = "RP09") %>%
+      
+      addRasterImage(EstQuant_1_in_2yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_2yr") %>%
+      addRasterImage(EstQuant_1_in_5yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_5yr") %>%
+      addRasterImage(EstQuant_1_in_10yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_10yr") %>%
+      addRasterImage(EstQuant_1_in_20yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_20yr") %>%
+      addRasterImage(EstQuant_1_in_30yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_30yr") %>%
+      addRasterImage(EstQuant_1_in_40yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_40yr") %>%
+      addRasterImage(EstQuant_1_in_50yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_50yr") %>%
+      addRasterImage(EstQuant_1_in_60yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_60yr") %>%
+      addRasterImage(EstQuant_1_in_70yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_70yr") %>%
+      addRasterImage(EstQuant_1_in_80yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_80yr") %>%
+      addRasterImage(EstQuant_1_in_90yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_90yr") %>%
+      addRasterImage(EstQuant_1_in_100yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_100yr") %>%
+      
+      
+      addLayersControl(
+        overlayGroups = c("Boundaries","Step 1", "RP05","RP06","RP07","RP08","RP09","RP1","EstQuant_1_in_2yr", "EstQuant_1_in_5yr", "EstQuant_1_in_10yr","EstQuant_1_in_20yr","EstQuant_1_in_30yr","EstQuant_1_in_40yr","EstQuant_1_in_50yr","EstQuant_1_in_60yr","EstQuant_1_in_70yr","EstQuant_1_in_80yr","EstQuant_1_in_90yr","EstQuant_1_in_100yr"  ),
+        options = layersControlOptions(collapsed = TRUE), position = "topright"
+      )  %>% 
+      hideGroup(c("RP1","RP09","RP08","RP07","RP06","EstQuant_1_in_2yr", "EstQuant_1_in_5yr", "EstQuant_1_in_10yr","EstQuant_1_in_20yr","EstQuant_1_in_30yr","EstQuant_1_in_40yr","EstQuant_1_in_50yr","EstQuant_1_in_60yr","EstQuant_1_in_70yr","EstQuant_1_in_80yr","EstQuant_1_in_90yr","EstQuant_1_in_100yr"))
     
-      addRasterImage(r, colors = "Spectral", opacity = 0.8, group = "RP1") %>%
-      addRasterImage(r05, colors = "Spectral", opacity = 0.8, group = "RP05") %>%
-      addRasterImage(r06, colors = "Spectral", opacity = 0.8, group = "RP06") %>%
-      addRasterImage(r07, colors = "Spectral", opacity = 0.8, group = "RP07") %>%
-      addRasterImage(r08, colors = "Spectral", opacity = 0.8, group = "RP08") %>%
-      addRasterImage(r09, colors = "Spectral", opacity = 0.8, group = "RP09") %>%
-      
-      addRasterImage(EstQuant_1_in_2yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_2yr") %>%
-      addRasterImage(EstQuant_1_in_5yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_5yr") %>%
-      addRasterImage(EstQuant_1_in_10yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_10yr") %>%
-      addRasterImage(EstQuant_1_in_50yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_50yr") %>%
-      addRasterImage(EstQuant_1_in_90yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_90yr") %>%
-      
-      
-      
-    addLayersControl(
-      overlayGroups = c("Boundaries","Step 1", "RP1","RP05","RP06","RP07","RP08","RP09","EstQuant_1_in_2yr", "EstQuant_1_in_5yr", "EstQuant_1_in_10yr","EstQuant_1_in_50yr","EstQuant_1_in_90yr"  ),
-      options = layersControlOptions(collapsed = FALSE)
-    )
-    
+    setwd(oldwd)
     remove_modal_spinner()
+    
+    
+    
+    
+    
+    
+    
+
     
     
   })
@@ -562,6 +602,16 @@ server <- function(input, output) {
     r08 <- raster('Mapas/RP08.tif')
     r09 <- raster('Mapas/RP09.tif')
     
+    
+    #rp legend colors
+    minrp <- min(c(r@data@min,r05@data@min,r06@data@min,r07@data@min,r08@data@min,r09@data@min))
+    maxrp <- max(c(r@data@max,r05@data@max,r06@data@max,r07@data@max,r08@data@max,r09@data@max))
+    rangodatos <- seq(minrp,maxrp,length.out=15)
+    pal <- colorNumeric("Blues", rangodatos,
+                        na.color = "transparent")
+    
+    
+    
     EstQuant_1_in_2yr <- raster('Mapas/EstQuant_1_in_2yr.tif')
     EstQuant_1_in_5yr <- raster('Mapas/EstQuant_1_in_5yr.tif')
     EstQuant_1_in_10yr <- raster('Mapas/EstQuant_1_in_10yr.tif')
@@ -575,27 +625,49 @@ server <- function(input, output) {
     EstQuant_1_in_90yr <- raster('Mapas/EstQuant_1_in_90yr.tif')
     EstQuant_1_in_100yr <- raster('Mapas/EstQuant_1_in_100yr.tif')
     
+    
+    #rp legend colors
+    minrp2 <- min(c(EstQuant_1_in_2yr@data@min,EstQuant_1_in_5yr@data@min,EstQuant_1_in_10yr@data@min,EstQuant_1_in_20yr@data@min,EstQuant_1_in_30yr@data@min,EstQuant_1_in_40yr@data@min,EstQuant_1_in_50yr@data@min,EstQuant_1_in_60yr@data@min,EstQuant_1_in_70yr@data@min,EstQuant_1_in_80yr@data@min,EstQuant_1_in_90yr@data@min,EstQuant_1_in_100yr@data@min))
+    maxrp2 <- max(c(EstQuant_1_in_2yr@data@max,EstQuant_1_in_5yr@data@max,EstQuant_1_in_10yr@data@max,EstQuant_1_in_20yr@data@max,EstQuant_1_in_30yr@data@max,EstQuant_1_in_40yr@data@max,EstQuant_1_in_50yr@data@max,EstQuant_1_in_60yr@data@max,EstQuant_1_in_70yr@data@max,EstQuant_1_in_80yr@data@max,EstQuant_1_in_90yr@data@max,EstQuant_1_in_100yr@data@max))
+    rangodatos2 <- seq(minrp2,maxrp2,length.out=5)
+    pal2 <- colorNumeric("YlOrRd", rangodatos2,
+                        na.color = "transparent")
+    
+    
+    
     leafletProxy("map2") %>%  addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
       
-      addRasterImage(r, colors = "Spectral", opacity = 0.8, group = "RP1") %>%
-      addRasterImage(r05, colors = "Spectral", opacity = 0.8, group = "RP05") %>%
-      addRasterImage(r06, colors = "Spectral", opacity = 0.8, group = "RP06") %>%
-      addRasterImage(r07, colors = "Spectral", opacity = 0.8, group = "RP07") %>%
-      addRasterImage(r08, colors = "Spectral", opacity = 0.8, group = "RP08") %>%
-      addRasterImage(r09, colors = "Spectral", opacity = 0.8, group = "RP09") %>%
+      addRasterImage(r, colors = pal, opacity = 0.8, group = "RP1") %>%
+      leaflet::addLegend(pal = pal, values = rangodatos,
+                title = "RP",   position = "bottomleft") %>%
+      leaflet::addLegend(pal = pal2, values = rangodatos2,
+                         title = "EstQuant",   position = "bottomright") %>%
+      addRasterImage(r05, colors = pal, opacity = 0.8, group = "RP05") %>%
+      addRasterImage(r06, colors = pal, opacity = 0.8, group = "RP06") %>%
+      addRasterImage(r07, colors = pal, opacity = 0.8, group = "RP07") %>%
+      addRasterImage(r08, colors = pal, opacity = 0.8, group = "RP08") %>%
+      addRasterImage(r09, colors = pal, opacity = 0.8, group = "RP09") %>%
       
-      addRasterImage(EstQuant_1_in_2yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_2yr") %>%
-      addRasterImage(EstQuant_1_in_5yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_5yr") %>%
-      addRasterImage(EstQuant_1_in_10yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_10yr") %>%
-      addRasterImage(EstQuant_1_in_50yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_50yr") %>%
-      addRasterImage(EstQuant_1_in_90yr, colors = "Spectral", opacity = 0.8, group = "EstQuant_1_in_90yr") %>%
-      
+      addRasterImage(EstQuant_1_in_2yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_2yr") %>%
+      addRasterImage(EstQuant_1_in_5yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_5yr") %>%
+      addRasterImage(EstQuant_1_in_10yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_10yr") %>%
+      addRasterImage(EstQuant_1_in_20yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_20yr") %>%
+      addRasterImage(EstQuant_1_in_30yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_30yr") %>%
+      addRasterImage(EstQuant_1_in_40yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_40yr") %>%
+      addRasterImage(EstQuant_1_in_50yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_50yr") %>%
+      addRasterImage(EstQuant_1_in_60yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_60yr") %>%
+      addRasterImage(EstQuant_1_in_70yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_70yr") %>%
+      addRasterImage(EstQuant_1_in_80yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_80yr") %>%
+      addRasterImage(EstQuant_1_in_90yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_90yr") %>%
+      addRasterImage(EstQuant_1_in_100yr, colors = pal2, opacity = 0.8, group = "EstQuant_1_in_100yr") %>%
       
       
       addLayersControl(
-        overlayGroups = c("Boundaries","Step 1", "RP1","RP05","RP06","RP07","RP08","RP09","EstQuant_1_in_2yr", "EstQuant_1_in_5yr", "EstQuant_1_in_10yr","EstQuant_1_in_50yr","EstQuant_1_in_90yr"  ),
-        options = layersControlOptions(collapsed = FALSE)
-      )
+        overlayGroups = c("Boundaries","Step 1", "RP05","RP06","RP07","RP08","RP09","RP1","EstQuant_1_in_2yr", "EstQuant_1_in_5yr", "EstQuant_1_in_10yr","EstQuant_1_in_20yr","EstQuant_1_in_30yr","EstQuant_1_in_40yr","EstQuant_1_in_50yr","EstQuant_1_in_60yr","EstQuant_1_in_70yr","EstQuant_1_in_80yr","EstQuant_1_in_90yr","EstQuant_1_in_100yr"  ),
+        options = layersControlOptions(collapsed = TRUE), position = "topright"
+      )  %>% 
+      hideGroup(c("RP1","RP09","RP08","RP07","RP06","EstQuant_1_in_2yr", "EstQuant_1_in_5yr", "EstQuant_1_in_10yr","EstQuant_1_in_20yr","EstQuant_1_in_30yr","EstQuant_1_in_40yr","EstQuant_1_in_50yr","EstQuant_1_in_60yr","EstQuant_1_in_70yr","EstQuant_1_in_80yr","EstQuant_1_in_90yr","EstQuant_1_in_100yr"))
+    
     setwd(oldwd)
     remove_modal_spinner()
     
