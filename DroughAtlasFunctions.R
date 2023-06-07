@@ -1908,6 +1908,64 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
 
 
 
+exploratory <- function(BaseDatosEstacionesClust, country, VarInter="CumSumDec"){
+  #debug BaseDatosEstacionesClust <- output4$BaseDatosEstacionesClust; VarInter="CumSumDec"
+  #################################################################################################################
+  ##################################################################################################################
+  
+  #Several plots showing main charateristics of the stations in the specified region
+  #revisar si se debe dejar como opción
+  #se deja en primera region, ya que la region 3 a veces genera errores
+  region.of.interest=unique(BaseDatosEstacionesClust$ClustReg_adapt)[1] #Some of the available regions in ClustReg_adapt or a number between 1 and ClustLevels
+  
+  #VarInter<-"CumSumDec"
+  ListadoEstaciones<-sqldf(paste("select id_station from BaseDatosEstacionesClust where ClustReg_adapt=='",region.of.interest,"'",sep=""))
+  LEst<-levels(factor(ListadoEstaciones["id_station"][,]))
+  Listado<-as.character(LEst)
+  BaseCompletaAdapt <- read.csv("BaseCompletaAdapt.csv")
+  
+  #.......Save plots to a PDF
+  pdf(paste0("EDA_",country,"_Region_",region.of.interest,".pdf"), width = 16 , height = 10, title = paste0("EDA Plots for ",country,": Region",region.of.interest))
+  par(mfrow=c(3,2))
+  for (m in 1:length(Listado)){
+    #Fig1. Boxplot
+    Boxplotmensual<-sqldf(paste("select Jan,Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec from BaseCompletaAdapt where id_station=='",Listado[m],"'",sep=""))
+    boxplot(Boxplotmensual,   main=Listado[m],pch=20,cex=1, cex.main=1, cex.axis=0.8, cex.lab=0.1,  las=1, xlab="Month", ylab="Precipitation[mm]")
+    
+    #Fig2. Barplot
+    BP<-matrix(colMeans(Boxplotmensual,na.rm=T),nrow=1)
+    barplot(BP,names.arg=c("E","F","M","A","M","J","J","A","S","O","N","D"),main=Listado[m], cex.names=0.8,cex.main=1,  xlab="Mes", ylab="Precipitation[mm]")
+    
+    Var<-sqldf(paste("select ",VarInter," from BaseCompletaAdapt where id_station=='",Listado[m],"'",sep=""))
+    #Fig3. Histogram
+    hist(as.numeric(Var[,1]),prob=T,xlab="Precipitation [mm]",ylab="Density",main=paste(Listado[m]," en ",VarInter),cex.main=1)
+    lines(density(as.numeric(Var[,1]),na.rm=T),col=451,lwd=2)
+    
+    # Fig4. Extreme value plot
+    evplot(as.numeric(Var[,1]),xlab="Gumbel Reduced Variable",ylab="Quantil",main=paste(Listado[m]," en ",VarInter),cex.main=1)
+    evdistq(quanor, pelnor(samlmu(as.numeric(Var[,1]))))
+    
+    # Fig5. L-moment ratio diagram
+    lmrd(samlmu(as.numeric(Var[,1])),xlim=c(-0.3,0.6),pch=19,col="red",cex=1.5,legend.lmrd=list(cex=1),main=paste(Listado[m]," en ",VarInter),cex.main=1,cex.lab=1)
+    
+    #Fig6.Time series plot 
+    TSP<-sqldf(paste("select Year, Jan,Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec from BaseCompletaAdapt where id_station=='",Listado[m],"'",sep=""))
+    dfm <- melt(TSP, id.var="Year", variable_name="Mes")
+    names(dfm) <- c("Year", "Mes", "Precipitacion")
+    pp_num <- unclass(dfm$Mes)
+    pp_frac <- as.numeric( (pp_num-0.5)/12   )
+    yr_frac <- as.numeric(dfm$Year) + pp_frac
+    dfm <- data.frame(yr_frac,  dfm)
+    dfm <- dfm[order(dfm$yr_frac), ]
+    dfmzoo<-zoo(dfm$Precipitacion,as.yearmon(dfm$yr_frac))
+    plot(dfmzoo,type="h",xlab="Year",ylab="Precipitation[mm]",main=Listado[m],cex.main=1,cex.lab=1)
+    
+  }
+  dev.off()
+  # ..............................................END OF BLOCK IV .................................................
+  
+}
+
 
 
 

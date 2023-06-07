@@ -1,14 +1,11 @@
-library(shiny)
-library(leaflet)
-library(shinybusy)
-library(shinyjs)
-library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
+library(shiny);library(leaflet);library(shinybusy);library(shinyjs);library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
 library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(corrplot);library(sqldf)
 library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para mantener orden texto-numero en id_station
 library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
 library(maptools);library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
 library(RSAGA);library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
-library(sf)
+library(sf);library(circular);library(reshape)
+
 workdir <- here()
 setwd(workdir)
 
@@ -445,6 +442,11 @@ server <- function(input, output) {
     # show the modal window
     database_creation(model=input$ddata, country = countryiso, clip_method = input$clipping  )
     remove_modal_spinner()
+    #vamos a ver numero de estaciones
+    stations <- read.csv(paste0(countryiso,"/BaseDatosEstaciones.csv", sep=""))
+    #ploteamos
+    showNotification(paste("Stations:",length(unique(stations$id_station)), " stations detected!"))
+    
     show_modal_spinner(text=paste0("Step 2 ",input$ddata," with name ", countryiso )) # show the modal window
     
     output_2 <- step2_variable_calculation(country =  countryiso)
