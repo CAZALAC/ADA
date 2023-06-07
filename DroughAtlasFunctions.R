@@ -414,9 +414,10 @@ randomSample = function(df,n) {
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
 
-database_creation <- function(model = "CRU", country = "BWA") {
+database_creation <- function(model = "CRU", country = "BWA", clip_method="Shape") {
+  print(clip_method)
   # BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
-  # debug: model = "CRU"; country = "Huasco"
+  # debug: model = "CRU"; country = "BWA"; clip_method="Shape"
   if(model=="CRU"){
     # Optional Config Setup, Country Code, Shape and raster creation =================
     workdir <- here()
@@ -456,8 +457,14 @@ database_creation <- function(model = "CRU", country = "BWA") {
     sps <- dummyreturn$sps
     rm(dummyreturn)
     #BoundariesAFR=readOGR("AfricaDA.shp") #from http://www.maplibrary.org/library/stacks/Africa/index.htm
-    pre.monthly.AFR=mask(pre.layers,polygons(sps))
-    pre.monthly.AFR=crop(pre.layers,polygons(sps))
+    if(clip_method == "Shape"){
+      pre.monthly.AFR=mask(pre.layers,Boundaries)
+      pre.monthly.AFR=crop(pre.layers,Boundaries)
+    } else {
+      pre.monthly.AFR=mask(pre.layers,polygons(sps))
+      pre.monthly.AFR=crop(pre.layers,polygons(sps))
+    }
+
  
     plot(pre.monthly.AFR[[1]])
     class(pre.monthly.AFR)
@@ -494,8 +501,18 @@ database_creation <- function(model = "CRU", country = "BWA") {
     #Stations Database Generacion (BaseDatosEstaciones) for a given country ============
     #country.rts=crop(pre.monthly.AFR,Boundaries)
     #porque asi evito pedazos del area sin estaciones en mallas gruesas
-    country.rts=crop(pre.monthly.AFR,sps)
-    country.rts=mask(country.rts,sps)
+    ###################
+    ### ALGUNAS VECES GENERAR RASTER MAL CORTADOS 
+    ###
+    ####################
+    if(clip_method == "Shape"){
+      country.rts=crop(pre.monthly.AFR,polygons(Boundaries))
+      country.rts=mask(country.rts,polygons(Boundaries))
+    } else {
+      country.rts=crop(pre.monthly.AFR,polygons(sps))
+      country.rts=mask(country.rts,polygons(sps))
+    }
+    
     country.rts.monthly=rts(country.rts,d)
     country.rts.anual <- apply.yearly(country.rts.monthly, sum)
     plot(mean(country.rts.anual@raster))
@@ -1631,17 +1648,17 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
   getinfo.shape(paste0(country,".shp"))# Este se edita y guarda aparte con SAGA
   getinfo.shape("Thiessen.shp") 
   
-  rsaga.geoprocessor("shapes_polygons",11,list(CLIP=paste0(country,".shp"),
-                                               S_INPUT="Thiessen.shp",
-                                               S_OUTPUT="CutThiessen.shp",
-                                               M_INPUT="Thiessen.shp",
-                                               MULTIPLE=0),display.command=TRUE)
+  #rsaga.geoprocessor("shapes_polygons",11,list(CLIP=paste0(country,".shp"),
+  #                                             S_INPUT="Thiessen.shp",
+  #                                             S_OUTPUT="CutThiessen.shp",
+  #                                             M_INPUT="Thiessen.shp",
+  #                                             MULTIPLE=0),display.command=TRUE)
   
   # update
-  #pol1  <- raster::shapefile(paste0(country,".shp"))
-  #pol2  <- st_read("Thiessen.shp")
-  #obj <- raster::intersect(pol1, pol2)
-  #writeSpatialShape(obj, "CutThiessen.shp")
+  pol1  <- raster::shapefile(paste0(country,".shp"))
+  pol2  <- raster::shapefile("Thiessen.shp")
+  obj <- raster::intersect(pol1, pol2)
+  writeSpatialShape(obj, "CutThiessen.shp")
    
   #Plot 
   CutThiessen <- readShapeSpatial("CutThiessen.shp")

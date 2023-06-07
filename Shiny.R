@@ -54,7 +54,8 @@ ui <- fluidPage(
                mainPanel(
                  #plotOutput("mapPlot"),
                  #plotOutput("mapPlot2"),
-                 leafletOutput("map")
+                 leafletOutput("map"),
+                 textOutput("stations")
                  
                )
              )           
@@ -80,24 +81,16 @@ ui <- fluidPage(
                  #plotOutput("mapPlot"),
                  #plotOutput("mapPlot2"),
                  leafletOutput("map2")
-                 
-               )
+                 )
              ) ),
     tabPanel("Config", 
              
              sidebarLayout(
                sidebarPanel(
-                 fileInput(
-                   inputId = "filemap3",
-                   label = "Upload map. Choose shapefile",
-                   multiple = TRUE,
-                   accept = c(".shp", ".dbf", ".sbn", ".sbx", ".shx", ".prj")
-                 ),
-                 tags$h5("or"),
-                 selectInput("icountry_list4", "Select a Country", country_list),
-                 actionButton(inputId = "Runs44", label = "Load Data")
+                 selectInput("clipping", "Clipping Method", c("Rectangle","Shape")),
+                 p("For CRU only. CHIRPS only has the rectangle option available."),
                  
-               ),
+              ),
                
                mainPanel(
                  #plotOutput("mapPlot"),
@@ -115,6 +108,38 @@ ui <- fluidPage(
 
 # server()
 server <- function(input, output) {
+
+  output$stations <- renderText({
+    
+    
+    if(length(input$filemap) > 1 ){
+      req(input$filemap)
+      shpdf <- input$filemap
+      tempdirname <- dirname(shpdf$datapath[1])
+      # Rename files
+      for (i in 1:nrow(shpdf)) {
+        file.rename(
+          shpdf$datapath[i],
+          paste0(tempdirname, "/", shpdf$name[i])
+        )
+      }
+      countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
+      countryiso = tools::file_path_sans_ext(countryiso)
+      
+    }else{
+      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+    }
+    
+    
+  if(file.exists(paste0(countryiso,"/BaseDatosEstaciones.csv", sep=""))){
+    try(stations <- read.csv(paste0(countryiso,"/BaseDatosEstaciones.csv", sep="")))
+    return(paste("Stations:",length(unique(stations$id_station)), " stations detected!")) 
+  } else {
+    return("Stations: No data")
+  }
+
+  })
+  
   observeEvent(input$refresh, {
     refresh()
   })
@@ -128,7 +153,6 @@ server <- function(input, output) {
     boundariescountry2 <- get_country_shape(country=input$icountry_list2) #raster::getData('GADM', country=countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c'), level=0)
     boundariescountry2
   })
-  
 
   output$map <- renderLeaflet({
     if(length(input$filemap) > 1 )
@@ -313,7 +337,6 @@ server <- function(input, output) {
     if(length(input$filemap) > 1 )
       
     {
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
       req(input$filemap)
       shpdf <- input$filemap
       tempdirname <- dirname(shpdf$datapath[1])
@@ -335,7 +358,7 @@ server <- function(input, output) {
     }
     # Number of times we'll go through the loop
     show_modal_spinner(text=paste0("Creating Stations from ",input$ddata," with name ", countryiso )) # show the modal window
-    database_creation(model=input$ddata, country = countryiso )
+    database_creation(model=input$ddata, country = countryiso, clip_method = input$clipping  )
     remove_modal_spinner() # remove it when done
     states2 <- sf::st_read(paste(countryiso,"randomsample.shp",sep = "/"))
     leafletProxy("map") %>%  addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
@@ -377,7 +400,6 @@ server <- function(input, output) {
     # Number of times we'll go through the loop
     show_modal_spinner(text=paste0("Step 2: Working in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
     
-    #database_creation(model=input$ddata, country = countryiso )
     output_2 <- step2_variable_calculation(country =  countryiso)
     Output_f2(output_2)
     remove_modal_spinner() # remove it when done
@@ -421,7 +443,7 @@ server <- function(input, output) {
     }
     show_modal_spinner(text=paste0("Step 1 ",input$ddata," with name ", countryiso )) # show the modal window
     # show the modal window
-    database_creation(model="CRU", country = countryiso )
+    database_creation(model=input$ddata, country = countryiso, clip_method = input$clipping  )
     remove_modal_spinner()
     show_modal_spinner(text=paste0("Step 2 ",input$ddata," with name ", countryiso )) # show the modal window
     
@@ -614,7 +636,6 @@ server <- function(input, output) {
     # Number of times we'll go through the loop
     #show_modal_spinner(text=paste0("Step 3: Working in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
     
-    #database_creation(model=input$ddata, country = countryiso )
     #output_2 <- step2_variable_calculation(country =  countryiso)
     #Output_f2(output_2)
     #remove_modal_spinner() # remove it when done
@@ -664,7 +685,6 @@ server <- function(input, output) {
     # Number of times we'll go through the loop
     #show_modal_spinner(text=paste0("Step 3: Working in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
     
-    #database_creation(model=input$ddata, country = countryiso )
     #output_2 <- step2_variable_calculation(country =  countryiso)
     #Output_f2(output_2)
     #remove_modal_spinner() # remove it when done
