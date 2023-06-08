@@ -28,7 +28,7 @@ library(sf);library(circular);library(reshape)
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="AfricaDA"
+country="TESTO3"
 
 
 #  Optinal Config =======================

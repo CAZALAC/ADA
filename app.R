@@ -16,7 +16,6 @@ datadownload <- c("CRU","CHIRPS")
 
 # ui object
 ui <- fluidPage(
-
   titlePanel(p("African Drought Atlas", style = "color:#3474A7")),
   
   tabsetPanel(

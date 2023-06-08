@@ -1652,21 +1652,25 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
   #                                             M_INPUT="Thiessen.shp",
   #                                             MULTIPLE=0),display.command=TRUE)
   
-  # update country="AfricaDA"
+  # update country="BWA"
   pol1  <- raster::shapefile(paste0(country,".shp"))
   #por si el archivo viene sin prj
-  pol2  <- raster::shapefile("Thiessen.shp")
+  pol2  <- Thiessen
   raster::crs(pol2) <- raster::crs(pol1)
-  #terra::crop(pol1,pol2)
+  #obj <- terra::crop(pol1,pol2, mask=TRUE)
   obj <- raster::intersect(pol1, pol2)
+  #st_crs(pol1)==st_crs(pol2)
+  
+  #plot(obj)
+  #
   writeSpatialShape(obj, "CutThiessen.shp")
    
   #Plot 
-  CutThiessen <- readShapeSpatial("CutThiessen.shp")
+  CutThiessen <- obj
   CutThiessen <- CutThiessen[,!(names(CutThiessen) %in% c("SP_ID"))]
-  names(CutThiessen)[3:length(names(CutThiessen))]=names(BaseMPMaskPlot)
+  #names(CutThiessen)[3:length(names(CutThiessen))]=names(BaseMPMaskPlot)
+
   plot(CutThiessen)
-  
   
   #.......Variables for mapping
   MapVarEstFreq=names(BaseModelMapCor)[grep('^EstFreq',names(BaseModelMapCor))]
@@ -1746,8 +1750,9 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
   for(i in 1:length(MapVarEstQuant)){
     Predictant<- MapVarEstQuant[i] # Defino el nombre del archivo de salida
     qdatafn <- BaseModelMapCor2[BaseModelMapCor2[,MapVarEstQuant[i]]>=0,] #Datos con cuantiles no negativos
-    Mask <- CutThiessen[CutThiessen[[MapVarEstQuant[i]]]>=0,] #Datos con cuantiles no negativos
     
+    Mask <- CutThiessen[CutThiessen[[MapVarEstQuant[i]]]>=0,] #Datos con cuantiles no negativos
+
     qdata.trainfn <- paste0(Predictant,"_BaseModelMapCor_TRAIN.csv") # Este va a ser el archivo (o data.frame) que se va a usar para entrenamiento
     qdata.testfn <-  paste0(Predictant,"_BaseModelMapCor_TEST.csv") # Este va a ser el archivo (o data.frame) que se va a usar como test de validaci?n del modelo
     
