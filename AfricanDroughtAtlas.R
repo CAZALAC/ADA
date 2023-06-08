@@ -21,7 +21,7 @@ library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para m
 library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
 library(maptools);library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
 library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
-library(sf);library(circular);library(reshape)
+library(sf);library(circular);library(reshape);library(deldir)
 #library(RSAGA);
 # Config ----------------------
 #Option 1: Replace with the corresponding three ISO letters. In this case, Botswana should be 
@@ -47,7 +47,7 @@ source('DroughAtlasFunctions.R')
 # Option 2: "CHIRPS" from http://iridl.ldeo.columbia.edu resolution 0.25'
 # Clip_method: Rectangle or Shape
 
-database_creation(model="CRU", country = country, clip_method="Rectangle" )
+database_creation(model="CHIRPS", country = country, clip_method="Rectangle" )
 
 # II. VARIABLES AND INDICES  CALCULATION --------------
 

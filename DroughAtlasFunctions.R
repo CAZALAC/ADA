@@ -288,8 +288,7 @@ H1ZDi=function (y,Nsim)
 # Function 3. Function to compute Voronoi maps
 
 voronoipolygons <- function(x) {
-  require(deldir)
-  require(sp)
+
   if (.hasSlot(x, 'coords')) {
     crds <- x@coords  
   } else crds <- x
@@ -410,10 +409,10 @@ randomSample = function(df,n) {
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
 
-database_creation <- function(model = "CRU", country = "BWA", clip_method="Shape") {
+database_creation <- function(model = "CRU", country = "BWA", clip_method="Rectangle") {
   print(clip_method)
   # BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
-  # debug: model = "CRU"; country = "BWA"; clip_method="Shape"
+  # debug: model = "CHIRPS"; country = "BWA"; clip_method="Rectangle"
   if(model=="CRU"){
     # Optional Config Setup, Country Code, Shape and raster creation =================
     workdir <- here()
@@ -732,7 +731,7 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Shape
     dir.create(paste0(getwd(),"/est_procesadas/"))
     
     for (m in 1:length(lista_est)){
-      print(paste0("estacion ", m, "de ",length(lista_est)))
+      print(paste0("estacion ", m, " de ",length(lista_est)))
       
       export <- lista_est[[m]]
       write.table(export, paste0(getwd(),"/est_procesadas/", names(lista_est)[m], "_latam.txt"), sep =";", row.names = FALSE)
@@ -781,8 +780,8 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Shape
     BaseDatosEstaciones=read.csv(paste0(getwd(),"/est_procesadas/metadata.txt"),sep=";",header=TRUE)
     colnames(BaseDatosEstaciones)[1]="id_station"
     row.names(BaseDatosEstaciones)=NULL
-    if (dim(BaseDatosEstaciones)[1]>500){
-      BaseDatosEstaciones=randomSample(BaseDatosEstaciones,500)
+    if (dim(BaseDatosEstaciones)[1]>1000){
+      BaseDatosEstaciones=randomSample(BaseDatosEstaciones,1000)
     } else {
       BaseDatosEstaciones=BaseDatosEstaciones
     }
@@ -790,7 +789,12 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Shape
     write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv", row.names=FALSE)
     #write.csv(BaseDatosEstaciones,"BaseDatosEstacionesBackup.csv", row.names=FALSE)
     #..........................................................END ...........................................
+    newshapefile <- BaseDatosEstaciones
+    coordinates(newshapefile)=~lon+lat
+    proj4string(newshapefile)<- CRS("+proj=longlat +datum=WGS84")
+    raster::shapefile(newshapefile, "randomsample.shp", overwrite=TRUE)
     setwd(workdir)
+    
   }
   else{
     message("Error selecting the model. Only the options CRU and CHIRPS are available.")

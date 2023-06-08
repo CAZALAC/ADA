@@ -1,11 +1,10 @@
-library(shiny);library(leaflet);library(shinybusy);library(shinyjs);library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
+library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
 library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(corrplot);library(sqldf)
 library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para mantener orden texto-numero en id_station
 library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
 library(maptools);library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
-#library(RSAGA)
 library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
-library(sf);library(circular);library(reshape)
+library(sf);library(circular);library(reshape);library(deldir)
 
 workdir <- here()
 setwd(workdir)
@@ -87,6 +86,9 @@ ui <- fluidPage(
                sidebarPanel(
                  selectInput("clipping", "Clipping Method", c("Rectangle","Shape")),
                  p("For CRU only. CHIRPS only has the rectangle option available."),
+                 numericInput("maxnstations", "Max. Stations:", 1000, min = 1, max = 10000),
+                 p("Max number of virtual stations to generate."),
+                 
                  
               ),
                
