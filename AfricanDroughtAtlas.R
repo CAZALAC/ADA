@@ -20,15 +20,15 @@ library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(cor
 library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para mantener orden texto-numero en id_station
 library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
 library(maptools);library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
-library(RSAGA);library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
+library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
 library(sf);library(circular);library(reshape)
-
+#library(RSAGA);
 # Config ----------------------
 #Option 1: Replace with the corresponding three ISO letters. In this case, Botswana should be 
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="TESTO3"
+country="BWA"
 
 
 #  Optinal Config =======================
@@ -45,8 +45,9 @@ source('DroughAtlasFunctions.R')
 # Choose one of the two model options based on country size    
 # Option 1: "CRU"  CRU 3.21
 # Option 2: "CHIRPS" from http://iridl.ldeo.columbia.edu resolution 0.25'
+# Clip_method: Rectangle or Shape
 
-database_creation(model="CRU", country = country )
+database_creation(model="CRU", country = country, clip_method="Rectangle" )
 
 # II. VARIABLES AND INDICES  CALCULATION --------------
 
@@ -63,11 +64,11 @@ exploratory(BaseDatosEstacionesClust = output_3$BaseDatosEstacionesClust, countr
 
 # V. L-MOMENTS BASED REGIONAL FREQUENCY ANALYSIS ------------------------------
 
-output4 <- regional_frequency_analysis(output_3$ClustLevels,output_3$NombreClusters,output_3$VarInter, output_3$BaseDatosEstacionesClust, output_2$BaseRegistrosPr, output_2$z,output_3$Hc, country)
+output5 <- regional_frequency_analysis(output_3$ClustLevels,output_3$NombreClusters,output_3$VarInter, output_3$BaseDatosEstacionesClust, output_2$BaseRegistrosPr, output_2$z,output_3$Hc, country)
 
 # VI. FREQUENCY/QUANTIL/RETURN PERIOD ESTIMATION ---------------------------------
-output5 <- period_estimation(output4$BaseSummaryStatistics, output4$BaseDatosEstacionesClust, output4$BaseBaseRegiones, output4$ResumeTable, output4$BaseMediaCompleta, output4$BaseProporCeros, output4$Basep0bias, output4$Baserfitdist, output4$Baserfitpara)
+output6 <- period_estimation(output5$BaseSummaryStatistics, output5$BaseDatosEstacionesClust, output5$BaseBaseRegiones, output5$ResumeTable, output5$BaseMediaCompleta, output5$BaseProporCeros, output5$Basep0bias, output5$Baserfitdist, output5$Baserfitpara)
 
 # VII: FREQUENCY/RETURN PERIOD/QUANTIL MAPPING ------------------
-period_mapping(output4$ResumeTable, output5$BaseModelMapCor, country, output_2$Boundaries)
+period_mapping(output5$ResumeTable, output6$BaseModelMapCor, country, output_2$Boundaries)
 

@@ -341,9 +341,6 @@ lm.coeficients <- function (modelobject) {
 
 
 
-#server down, check
-#library(geodata)
-#debido a que se llama mucho
 get_country_shape  <- function(country){
   sf_objet <- sf::st_as_sf(geodata::gadm(country=country, level=0, path=tempdir()))
   #legacy
