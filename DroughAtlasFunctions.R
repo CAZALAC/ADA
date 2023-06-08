@@ -571,10 +571,10 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Shape
     
     # BLOCK I.B. DATABASE CONSTRUCTION FROM CHIRPS ------------------
     #AFRICAN DROUGHT ATLAS CHIRPS
-    
-    # Optional Setup, Country Code, Shape and raster creation ========
-    workdir = here()
+    workdir <- here()
     setwd(workdir)
+    print(workdir)
+
     
     # Listado de paises segun codigo ISO
     ISO.codes <- read.csv("CountryISOCodes.csv",sep=";")
@@ -591,8 +591,8 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Shape
     #raster::projection(BoundariesAFR)="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
     
     #Create working directory and set working directory
-    dir.create(paste0(workdir,country))
-    setwd(paste0(getwd(),"/",country))
+    dir.create(paste0("./",country,sep=""))
+    setwd(paste0("./",country,sep=""))
     
     shapefile(Boundaries, filename=country, overwrite=TRUE)
     #writeOGR(Boundaries, dsn = '.', layer = country, driver = "ESRI Shapefile",overwrite_layer=TRUE)
@@ -1409,7 +1409,7 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
 
 period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, BaseBaseRegiones, ResumeTable, BaseMediaCompleta, BaseProporCeros, Basep0bias, Baserfitdist, Baserfitpara){
   
-  #debug BaseSummaryStatistics = output4$BaseSummaryStatistics; BaseDatosEstacionesClust = output4$BaseDatosEstacionesClust; BaseBaseRegiones = output4$BaseBaseRegiones; ResumeTable = output4$ResumeTable
+  #debug BaseSummaryStatistics = output5$BaseSummaryStatistics; BaseDatosEstacionesClust = output5$BaseDatosEstacionesClust; BaseBaseRegiones = output5$BaseBaseRegiones; ResumeTable = output5$ResumeTable
   # These are the L-moments of the Variable of Interest (not necessarily annual precipitation)
   #These are the L-moments of the non zero records
   lmom.df=data.frame(BaseSummaryStatistics[[1]][,,1])
