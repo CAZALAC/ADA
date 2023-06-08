@@ -1,14 +1,13 @@
 #Install Drought Atlas required packages
-TotalADAPackages=c("raster","rgdal","countrycode","rts","ncdf4","HelpersMG",
+requiredPackages=c("raster","rgdal","countrycode","rts","ncdf4","HelpersMG",
                    "plyr","latticeExtra","reshape2","gdata","corrplot","sqldf",
                    "zoo","Kendall","zyp","car","gtools",
                    "rgeos","lmom","lmomRFA","sp","rrcov","nsRFA","ModelMap",
                    "maptools","stringr","rasterVis","hydroGOF","randomForest","progress",
                    "gtools","here","chron","lattice","RColorBrewer",
-                   "sf","circular","reshape","deldir")
+                   "sf","circular","reshape","deldir","shiny","leaflet","shinybusy","shinyjs")
 
-usePackage <- function(p) {
-  if (!is.element(p, installed.packages()[,1]))
-    install.packages(p, dep = TRUE)
+for(p in requiredPackages){
+  if(!require(p,character.only = TRUE)) install.packages(p)
+  library(p,character.only = TRUE)
 }
-usePackage(TotalADAPackages)
