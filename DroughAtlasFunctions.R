@@ -1602,7 +1602,7 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
 
 
 period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
-  #debug ResumeTable = output4$ResumeTable; BaseModelMapCor = output5$BaseModelMapCor; Boundaries = output_2$Boundaries
+  #debug ResumeTable = output5$ResumeTable; BaseModelMapCor = output6$BaseModelMapCor; Boundaries = output_2$Boundaries
   # Prepare Thiessen polygons mask shapefile and plotting
   # Calculo Periodo de Retorno m?ximo posible de calcular 5t- rule Jakob et al, 1999
   #RecLength=quantile(BaseModelMapCorII$RL_Station,0.5)
@@ -1623,7 +1623,7 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
   for (i in 1:length(FQCols)){
     BaseModelMapMask[FQCols[i]][BaseModelMapMask[FQCols[i]]<0.001]=0.001
   }
-  
+
   BaseMPMaskPlot=BaseModelMapMask[c(grep('lon',names(BaseModelMapMask)),
                                     grep('lat',names(BaseModelMapMask)),
                                     grep('ClustReg_adapt',names(BaseModelMapMask)),#Adicionado para mapeo de clusters
@@ -1632,6 +1632,59 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
                                     grep('^RP',names(BaseModelMapMask)),
                                     grep('EstQuant',names(BaseModelMapMask)))]
   coordinates(BaseMPMaskPlot)= c("lon","lat")
+
+pol1  <- raster::shapefile(paste0(country,".shp"))
+#When creating the new shapefile with "coordinates",
+#the extent was generated based on the stations.
+#However, if the stations were smaller than the study area,
+#it could generate rasters that are cropped by the extent.
+#Therefore, we check the extent to ensure that none of 
+#its corners are smaller than the shapefile to be used. 
+#If any corner is smaller, we use the extent of the shapefile instead.
+if(st_bbox(pol1)$xmin > 0){
+  if(st_bbox(pol1)$xmin < min(BaseMPMaskPlot@coords[,1])){
+    BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
+  }}
+
+if(st_bbox(pol1)$xmax > 0){
+  if(st_bbox(pol1)$xmax > max(BaseMPMaskPlot@coords[,1])){
+    BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
+  }}
+
+if(st_bbox(pol1)$xmin < 0){
+  if(st_bbox(pol1)$xmin > min(BaseMPMaskPlot@coords[,1])){
+    BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
+  }}
+
+if(st_bbox(pol1)$xmax < 0){
+    if(st_bbox(pol1)$xmax < max(BaseMPMaskPlot@coords[,1])){
+      BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
+    }}
+#fix lat
+if(st_bbox(pol1)$ymin > 0){
+  if(st_bbox(pol1)$ymin < min(BaseMPMaskPlot@coords[1,])){
+    BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
+  }}
+
+if(st_bbox(pol1)$ymax > 0){
+  if(st_bbox(pol1)$ymax > max(BaseMPMaskPlot@coords[1,])){
+    BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
+  }}
+
+if(st_bbox(pol1)$ymin < 0){
+  if(st_bbox(pol1)$ymin > min(BaseMPMaskPlot@coords[1,])){
+    BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
+  }}
+
+if(st_bbox(pol1)$ymax < 0){
+  if(st_bbox(pol1)$ymax < max(BaseMPMaskPlot@coords[1,])){
+    BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
+  }}
+
+
+  
+
+
   writeSpatialShape(BaseMPMaskPlot, "BaseMPMaskPlot")
   #OPcion Thiessen con Voronoi dentro de R
   Thiessen <- voronoipolygons(BaseMPMaskPlot)
@@ -1658,7 +1711,7 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
   #                                             MULTIPLE=0),display.command=TRUE)
   
   # update country="BWA"
-  pol1  <- raster::shapefile(paste0(country,".shp"))
+  #pol1  <- raster::shapefile(paste0(country,".shp"))
   #por si el archivo viene sin prj
   pol2  <- Thiessen
   raster::crs(pol2) <- raster::crs(pol1)
