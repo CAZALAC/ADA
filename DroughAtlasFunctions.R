@@ -792,6 +792,10 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     newshapefile <- BaseDatosEstaciones
     coordinates(newshapefile)=~lon+lat
     proj4string(newshapefile)<- CRS("+proj=longlat +datum=WGS84")
+    #the same format that nc file
+    newshapefile@data["x"] <- BaseDatosEstaciones$lon
+    newshapefile@data["y"] <- BaseDatosEstaciones$lat
+    newshapefile@data["cell"] <- 1
     raster::shapefile(newshapefile, "randomsample.shp", overwrite=TRUE)
     setwd(workdir)
     
@@ -1658,18 +1662,12 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
   #por si el archivo viene sin prj
   pol2  <- Thiessen
   raster::crs(pol2) <- raster::crs(pol1)
-  #obj <- terra::crop(pol1,pol2, mask=TRUE)
   obj <- raster::intersect(pol1, pol2)
-  #st_crs(pol1)==st_crs(pol2)
-  
-  #plot(obj)
-  #
   writeSpatialShape(obj, "CutThiessen.shp")
    
   #Plot 
   CutThiessen <- obj
   CutThiessen <- CutThiessen[,!(names(CutThiessen) %in% c("SP_ID"))]
-  #names(CutThiessen)[3:length(names(CutThiessen))]=names(BaseMPMaskPlot)
 
   plot(CutThiessen)
   

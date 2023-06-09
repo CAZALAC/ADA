@@ -707,7 +707,7 @@ server <- function(input, output) {
     setwd(countryiso)
     show_modal_spinner(text=paste0("plotting... ", countryiso )) # show the modal window
     
-    states2 <- sf::st_read("randomsample.shp")
+    states2 <-  raster::shapefile("randomsample.shp")
     r <- raster('Mapas/RP1.tif')
     r05 <- raster('Mapas/RP05.tif')
     r06 <- raster('Mapas/RP06.tif')
@@ -738,7 +738,6 @@ server <- function(input, output) {
     EstQuant_1_in_90yr <- raster('Mapas/EstQuant_1_in_90yr.tif')
     EstQuant_1_in_100yr <- raster('Mapas/EstQuant_1_in_100yr.tif')
     
-    
     #rp legend colors
     minrp2 <- min(c(EstQuant_1_in_2yr@data@min,EstQuant_1_in_5yr@data@min,EstQuant_1_in_10yr@data@min,EstQuant_1_in_20yr@data@min,EstQuant_1_in_30yr@data@min,EstQuant_1_in_40yr@data@min,EstQuant_1_in_50yr@data@min,EstQuant_1_in_60yr@data@min,EstQuant_1_in_70yr@data@min,EstQuant_1_in_80yr@data@min,EstQuant_1_in_90yr@data@min,EstQuant_1_in_100yr@data@min))
     maxrp2 <- max(c(EstQuant_1_in_2yr@data@max,EstQuant_1_in_5yr@data@max,EstQuant_1_in_10yr@data@max,EstQuant_1_in_20yr@data@max,EstQuant_1_in_30yr@data@max,EstQuant_1_in_40yr@data@max,EstQuant_1_in_50yr@data@max,EstQuant_1_in_60yr@data@max,EstQuant_1_in_70yr@data@max,EstQuant_1_in_80yr@data@max,EstQuant_1_in_90yr@data@max,EstQuant_1_in_100yr@data@max))
@@ -748,11 +747,11 @@ server <- function(input, output) {
     
     
     
-    leafletProxy("map2") %>%  addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
-      
+    leafletProxy("map2") %>%  
+      addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
       addRasterImage(r, colors = pal, opacity = 0.8, group = "RP1") %>%
       leaflet::addLegend(pal = pal, values = rangodatos,
-                title = "RP",   position = "bottomleft") %>%
+               title = "RP",   position = "bottomleft") %>%
       leaflet::addLegend(pal = pal2, values = rangodatos2,
                          title = "EstQuant",   position = "bottomright") %>%
       addRasterImage(r05, colors = pal, opacity = 0.8, group = "RP05") %>%
