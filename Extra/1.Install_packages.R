@@ -5,7 +5,7 @@ requiredPackages=c("raster","rgdal","countrycode","rts","ncdf4","HelpersMG",
                    "rgeos","lmom","lmomRFA","sp","rrcov","nsRFA","ModelMap",
                    "maptools","stringr","rasterVis","hydroGOF","randomForest","progress",
                    "gtools","here","chron","lattice","RColorBrewer",
-                   "sf","circular","reshape","deldir","shiny","leaflet","shinybusy","shinyjs")
+                   "sf","circular","reshape","deldir","shiny","leaflet","shinybusy","shinyjs","geodata")
 
 for(p in requiredPackages){
   if(!require(p,character.only = TRUE)) install.packages(p)

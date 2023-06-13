@@ -1753,7 +1753,7 @@ if(st_bbox(pol1)$ymax < 0){
   points(coords,col="red")
   
   
-  carpetaADAFolderPredictors = "../../ADAFolderPredictors/"
+  carpetaADAFolderPredictors = "ADAFolderPredictors/"
   #Este es un fix por si se pegaron mal los archivos necesarios
   #solo para evitar errores
   if(length(dir(path = carpetaADAFolderPredictors, all.files=TRUE)) ==0){
