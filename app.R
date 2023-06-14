@@ -86,7 +86,7 @@ ui <- fluidPage(
                sidebarPanel(
                  selectInput("clipping", "Clipping Method", c("Rectangle","Shape")),
                  p("For CRU only. CHIRPS only has the rectangle option available."),
-                 numericInput("maxnstations", "Max. Stations:", 1000, min = 1, max = 10000),
+                 numericInput("maxstations", "Max. Stations:", 1000, min = 1, max = 10000),
                  p("Max number of virtual stations to generate."),
                  
                  
@@ -349,7 +349,7 @@ server <- function(input, output) {
     }
     # Number of times we'll go through the loop
     show_modal_spinner(text=paste0("Creating Stations from ",input$ddata," with name ", countryiso )) # show the modal window
-    database_creation(model=input$ddata, country = countryiso, clip_method = input$clipping  )
+    database_creation(model=input$ddata, country = countryiso, clip_method = input$clipping, maxstations = input$maxstations  )
     remove_modal_spinner() # remove it when done
     states2 <- sf::st_read(paste(countryiso,"randomsample.shp",sep = "/"))
     leafletProxy("map") %>%  addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
@@ -553,7 +553,7 @@ server <- function(input, output) {
     
     show_modal_spinner(text=paste0("Step 1 ",input$ddata," with name ", countryiso )) # show the modal window
     # show the modal window
-    database_creation(model=input$ddata, country = countryiso, clip_method = input$clipping  )
+    database_creation(model=input$ddata, country = countryiso, clip_method = input$clipping, maxstations = input$maxstations  )
     remove_modal_spinner()
     #vamos a ver numero de estaciones
     stations <- read.csv(paste0(countryiso,"/BaseDatosEstaciones.csv", sep=""))

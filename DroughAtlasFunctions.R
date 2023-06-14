@@ -409,7 +409,7 @@ randomSample = function(df,n) {
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
 
-database_creation <- function(model = "CRU", country = "BWA", clip_method="Rectangle") {
+database_creation <- function(model = "CRU", country = "BWA", clip_method="Rectangle", maxstations=1000) {
   print(clip_method)
   # BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
   # debug: model = "CHIRPS"; country = "BWA"; clip_method="Rectangle"
@@ -515,7 +515,7 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     #Here a maximum number of stations is defined ======================================
     
     useful.pixels=length(na.omit(getValues(country.rts[[1]])))
-    if(useful.pixels<1000) size=useful.pixels else size=1000
+    if(useful.pixels<maxstations) size=useful.pixels else size=maxstations
     
     rs=sampleRandom(country.rts[[1]], cells=TRUE,xy=TRUE,size=size,sp=TRUE)
     points(rs,col="red")
@@ -780,8 +780,8 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     BaseDatosEstaciones=read.csv(paste0(getwd(),"/est_procesadas/metadata.txt"),sep=";",header=TRUE)
     colnames(BaseDatosEstaciones)[1]="id_station"
     row.names(BaseDatosEstaciones)=NULL
-    if (dim(BaseDatosEstaciones)[1]>1000){
-      BaseDatosEstaciones=randomSample(BaseDatosEstaciones,1000)
+    if (dim(BaseDatosEstaciones)[1]>maxstations){
+      BaseDatosEstaciones=randomSample(BaseDatosEstaciones,maxstations)
     } else {
       BaseDatosEstaciones=BaseDatosEstaciones
     }
@@ -1758,7 +1758,11 @@ if(st_bbox(pol1)$ymax < 0){
   #solo para evitar errores
   if(length(dir(path = carpetaADAFolderPredictors, all.files=TRUE)) ==0){
     carpetaADAFolderPredictors =  "../../../ADAFolderPredictors/"
-  } else if(length(dir(path = carpetaADAFolderPredictors, all.files=TRUE))){
+  } 
+  if(length(dir(path = carpetaADAFolderPredictors, all.files=TRUE)) ==0){
+    carpetaADAFolderPredictors =  "../../ADAFolderPredictors/"
+  } 
+  if(length(dir(path = carpetaADAFolderPredictors, all.files=TRUE)) ==0){
     carpetaADAFolderPredictors =  "../ADAFolderPredictors/"
   }
   #Rasterbrick creation with the maps of all predictors
