@@ -33,14 +33,14 @@ ui <- fluidPage(
                  selectInput("icountry_list", "Select a Country", country_list),
                  selectInput(inputId = "ddata", "Data Source", datadownload ),
                  actionButton(inputId = "Runs1", label = "Run Step 1"),
-                 actionButton(inputId = "Runs2", label = "Run Step 2"),
-                 actionButton(inputId = "Runs3", label = "Run Step 3"),
-                 actionButton(inputId = "Runs4EA", label = "Run Step 4 (EA)"),
-                 actionButton(inputId = "Runs5", label = "Run Step 5"),
-                 actionButton(inputId = "Runs6", label = "Run Step 6"),
-                 actionButton(inputId = "Runs7", label = "Run Step 7"),
+                 #actionButton(inputId = "Runs2", label = "Run Step 2"),
+                 #actionButton(inputId = "Runs3", label = "Run Step 3"),
+                 #actionButton(inputId = "Runs4EA", label = "Run Step 4 (EA)"),
+                 #actionButton(inputId = "Runs5", label = "Run Step 5"),
+                 #actionButton(inputId = "Runs6", label = "Run Step 6"),
+                 #actionButton(inputId = "Runs7", label = "Run Step 7"),
                  
-                 actionButton(inputId = "RunsA", label = "Run ALL"),
+                 actionButton(inputId = "RunsA", label = "Run Steps 2-7"),
                  useShinyjs(),
                  actionButton("refresh", "Refresh"),
 
@@ -362,166 +362,163 @@ server <- function(input, output) {
   })
   
   
-  observeEvent(input$Runs2, {
-    
-    if(length(input$filemap) > 1 )
-      
-    {
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-      req(input$filemap)
-      shpdf <- input$filemap
-      tempdirname <- dirname(shpdf$datapath[1])
-      
-      # Rename files
-      for (i in 1:nrow(shpdf)) {
-        file.rename(
-          shpdf$datapath[i],
-          paste0(tempdirname, "/", shpdf$name[i])
-        )
-      }
-      
-      countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
-      countryiso = tools::file_path_sans_ext(countryiso)
-      
-    }
-    else{
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-    }
- 
-    # Number of times we'll go through the loop
-    show_modal_spinner(text=paste0("Step 2: Working in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
-    
-    output_2 <- step2_variable_calculation(country =  countryiso)
-    Output_f2(output_2)
-    remove_modal_spinner() # remove it when done
-    
-    #states2 <- sf::st_read(paste(countryiso,"randomsample.shp",sep = "/"))
-    #leafletProxy("map") %>%  addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
-    #  # Layers control
-    #  addLayersControl(
-    #    overlayGroups = c("Boundaries","Step 1"),
-    #    options = layersControlOptions(collapsed = FALSE)
-     # )
-    
-  })
+  # observeEvent(input$Runs2, {
+  #   
+  #   if(length(input$filemap) > 1 )
+  #     
+  #   {
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #     req(input$filemap)
+  #     shpdf <- input$filemap
+  #     tempdirname <- dirname(shpdf$datapath[1])
+  #     
+  #     # Rename files
+  #     for (i in 1:nrow(shpdf)) {
+  #       file.rename(
+  #         shpdf$datapath[i],
+  #         paste0(tempdirname, "/", shpdf$name[i])
+  #       )
+  #     }
+  #     
+  #     countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
+  #     countryiso = tools::file_path_sans_ext(countryiso)
+  #     
+  #   }
+  #   else{
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #   }
+  # 
+  #   # Number of times we'll go through the loop
+  #   show_modal_spinner(text=paste0("Step 2: Working in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
+  #   
+  #   output_2 <- step2_variable_calculation(country =  countryiso)
+  #   Output_f2(output_2)
+  #   remove_modal_spinner() # remove it when done
+  #   
+  #   #states2 <- sf::st_read(paste(countryiso,"randomsample.shp",sep = "/"))
+  #   #leafletProxy("map") %>%  addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
+  #   #  # Layers control
+  #   #  addLayersControl(
+  #   #    overlayGroups = c("Boundaries","Step 1"),
+  #   #    options = layersControlOptions(collapsed = FALSE)
+  #    # )
+  #   
+  # })
+  
+  # observeEvent(input$Runs4, {
+  #   
+  #   if(length(input$filemap) > 1 )
+  #     
+  #   {
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #     req(input$filemap)
+  #     shpdf <- input$filemap
+  #     tempdirname <- dirname(shpdf$datapath[1])
+  #     
+  #     # Rename files
+  #     for (i in 1:nrow(shpdf)) {
+  #       file.rename(
+  #         shpdf$datapath[i],
+  #         paste0(tempdirname, "/", shpdf$name[i])
+  #       )
+  #     }
+  #     
+  #     countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
+  #     countryiso = tools::file_path_sans_ext(countryiso)
+  #     
+  #   }
+  #   else{
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #   }
+  #   
+  #   # Number of times we'll go through the loop
+  #  
+  #   show_modal_spinner(text=paste0("Exploratory Step ",input$ddata," with name ", countryiso )) # show the modal window
+  #   exploratory(BaseDatosEstacionesClust = output_4_input$BaseDatosEstacionesClust, country = countryiso, VarInter="CumSumDec")
+  #   remove_modal_spinner()
+  #   
+  # 
+  #   
+  # })
   
   
   
+  # observeEvent(input$Runs6, {
+  #   
+  #   
+  #   if(length(input$filemap) > 1 )
+  #     
+  #   {
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #     req(input$filemap)
+  #     shpdf <- input$filemap
+  #     tempdirname <- dirname(shpdf$datapath[1])
+  #     
+  #     # Rename files
+  #     for (i in 1:nrow(shpdf)) {
+  #       file.rename(
+  #         shpdf$datapath[i],
+  #         paste0(tempdirname, "/", shpdf$name[i])
+  #       )
+  #     }
+  #     
+  #     countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
+  #     countryiso = tools::file_path_sans_ext(countryiso)
+  #     
+  #   }
+  #   else{
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #   }
+  # 
+  #   show_modal_spinner(text=paste0("Step 5 ",input$ddata," with name ", countryiso )) # show the modal window
+  #   output_3_input <- Output_f2()
+  #   output_4_input <- Output_f3()
+  #   output_5_input <- Output_f4()
+  #   output5 <- period_estimation(output_5_input$BaseSummaryStatistics, output_5_input$BaseDatosEstacionesClust, output_5_input$BaseBaseRegiones, output_5_input$ResumeTable, output_5_input$BaseMediaCompleta, output_5_input$BaseProporCeros, output_5_input$Basep0bias, output_5_input$Baserfitdist, output_5_input$Baserfitpara)
+  #   remove_modal_spinner()
+  #   Output_f5(output5)
+  #   })
   
-  observeEvent(input$Runs4, {
-    
-    if(length(input$filemap) > 1 )
-      
-    {
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-      req(input$filemap)
-      shpdf <- input$filemap
-      tempdirname <- dirname(shpdf$datapath[1])
-      
-      # Rename files
-      for (i in 1:nrow(shpdf)) {
-        file.rename(
-          shpdf$datapath[i],
-          paste0(tempdirname, "/", shpdf$name[i])
-        )
-      }
-      
-      countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
-      countryiso = tools::file_path_sans_ext(countryiso)
-      
-    }
-    else{
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-    }
-    
-    # Number of times we'll go through the loop
-   
-    show_modal_spinner(text=paste0("Exploratory Step ",input$ddata," with name ", countryiso )) # show the modal window
-    exploratory(BaseDatosEstacionesClust = output_4_input$BaseDatosEstacionesClust, country = countryiso, VarInter="CumSumDec")
-    remove_modal_spinner()
-    
-
-    
-  })
-  
-  
-  
-  observeEvent(input$Runs6, {
-    
-    
-    if(length(input$filemap) > 1 )
-      
-    {
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-      req(input$filemap)
-      shpdf <- input$filemap
-      tempdirname <- dirname(shpdf$datapath[1])
-      
-      # Rename files
-      for (i in 1:nrow(shpdf)) {
-        file.rename(
-          shpdf$datapath[i],
-          paste0(tempdirname, "/", shpdf$name[i])
-        )
-      }
-      
-      countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
-      countryiso = tools::file_path_sans_ext(countryiso)
-      
-    }
-    else{
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-    }
-
-    show_modal_spinner(text=paste0("Step 5 ",input$ddata," with name ", countryiso )) # show the modal window
-    output_3_input <- Output_f2()
-    output_4_input <- Output_f3()
-    output_5_input <- Output_f4()
-    output5 <- period_estimation(output_5_input$BaseSummaryStatistics, output_5_input$BaseDatosEstacionesClust, output_5_input$BaseBaseRegiones, output_5_input$ResumeTable, output_5_input$BaseMediaCompleta, output_5_input$BaseProporCeros, output_5_input$Basep0bias, output_5_input$Baserfitdist, output_5_input$Baserfitpara)
-    remove_modal_spinner()
-    Output_f5(output5)
-    })
-  
-  observeEvent(input$Runs7, {
-    
-    
-    if(length(input$filemap) > 1 )
-      
-    {
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-      req(input$filemap)
-      shpdf <- input$filemap
-      tempdirname <- dirname(shpdf$datapath[1])
-      
-      # Rename files
-      for (i in 1:nrow(shpdf)) {
-        file.rename(
-          shpdf$datapath[i],
-          paste0(tempdirname, "/", shpdf$name[i])
-        )
-      }
-      
-      countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
-      countryiso = tools::file_path_sans_ext(countryiso)
-      
-    }
-    else{
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-    }
-    
-    show_modal_spinner(text=paste0("mapping... ",input$ddata," with name ", countryiso )) # show the modal window
-    
-    output_3_input <- Output_f2()
-    output_4_input <- Output_f3()
-    output_5_input <- Output_f4()
-    output_6_input <- Output_f5()
-    
-    output6 <- period_mapping(output_5_input$ResumeTable, output_6_input$BaseModelMapCor, countryiso, output_3_input$Boundaries)
-
-    remove_modal_spinner()
-    
-    
-  })
+  # observeEvent(input$Runs7, {
+  #   
+  #   
+  #   if(length(input$filemap) > 1 )
+  #     
+  #   {
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #     req(input$filemap)
+  #     shpdf <- input$filemap
+  #     tempdirname <- dirname(shpdf$datapath[1])
+  #     
+  #     # Rename files
+  #     for (i in 1:nrow(shpdf)) {
+  #       file.rename(
+  #         shpdf$datapath[i],
+  #         paste0(tempdirname, "/", shpdf$name[i])
+  #       )
+  #     }
+  #     
+  #     countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
+  #     countryiso = tools::file_path_sans_ext(countryiso)
+  #     
+  #   }
+  #   else{
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #   }
+  #   
+  #   show_modal_spinner(text=paste0("mapping... ",input$ddata," with name ", countryiso )) # show the modal window
+  #   
+  #   output_3_input <- Output_f2()
+  #   output_4_input <- Output_f3()
+  #   output_5_input <- Output_f4()
+  #   output_6_input <- Output_f5()
+  #   
+  #   output6 <- period_mapping(output_5_input$ResumeTable, output_6_input$BaseModelMapCor, countryiso, output_3_input$Boundaries)
+  # 
+  #   remove_modal_spinner()
+  #   
+  #   
+  # })
   
   
   observeEvent(input$RunsA, {
@@ -808,79 +805,79 @@ server <- function(input, output) {
   
   
   
-  observeEvent(input$Runs3, {
-    
-    if(length(input$filemap) > 1 )
-      
-    {
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-      req(input$filemap)
-      shpdf <- input$filemap
-      tempdirname <- dirname(shpdf$datapath[1])
-      
-      # Rename files
-      for (i in 1:nrow(shpdf)) {
-        file.rename(
-          shpdf$datapath[i],
-          paste0(tempdirname, "/", shpdf$name[i])
-        )
-      }
-      
-      countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
-      countryiso = tools::file_path_sans_ext(countryiso)
-      
-    }
-    else{
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-    }
-    show_modal_spinner(text=paste0("Step 3: Working in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
-    
-    output_2_input <- Output_f2()
-    output_reg <- regionalization(output_2_input$BaseDatosEstaciones,output_2_input$BaseRegistrosPr)
-    Output_f3(output_reg)
-    remove_modal_spinner()
- 
-  })
+  # observeEvent(input$Runs3, {
+  #   
+  #   if(length(input$filemap) > 1 )
+  #     
+  #   {
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #     req(input$filemap)
+  #     shpdf <- input$filemap
+  #     tempdirname <- dirname(shpdf$datapath[1])
+  #     
+  #     # Rename files
+  #     for (i in 1:nrow(shpdf)) {
+  #       file.rename(
+  #         shpdf$datapath[i],
+  #         paste0(tempdirname, "/", shpdf$name[i])
+  #       )
+  #     }
+  #     
+  #     countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
+  #     countryiso = tools::file_path_sans_ext(countryiso)
+  #     
+  #   }
+  #   else{
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #   }
+  #   show_modal_spinner(text=paste0("Step 3: Working in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
+  #   
+  #   output_2_input <- Output_f2()
+  #   output_reg <- regionalization(output_2_input$BaseDatosEstaciones,output_2_input$BaseRegistrosPr)
+  #   Output_f3(output_reg)
+  #   remove_modal_spinner()
+  # 
+  # })
   
   
   
   
   
   
-  observeEvent(input$Runs5, {
-    
-    if(length(input$filemap) > 1 )
-      
-    {
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-      req(input$filemap)
-      shpdf <- input$filemap
-      tempdirname <- dirname(shpdf$datapath[1])
-      
-      # Rename files
-      for (i in 1:nrow(shpdf)) {
-        file.rename(
-          shpdf$datapath[i],
-          paste0(tempdirname, "/", shpdf$name[i])
-        )
-      }
-      
-      countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
-      countryiso = tools::file_path_sans_ext(countryiso)
-      
-    }
-    else{
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
-    }
-    #output4 <- regional_frequency_analysis(output_3$ClustLevels,output_3$NombreClusters,output_3$VarInter, output_3$BaseDatosEstacionesClust, output_2$BaseRegistrosPr, output_2$z,output_3$Hc)
-    show_modal_spinner(text=paste0("Step 4: Working in FREQUENCY/QUANTIL/RETURN PERIOD ESTIMATIONWorking in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
-    output_3_input <- Output_f2()
-    output_4_input <- Output_f3()
-    output4 <- regional_frequency_analysis(output_4_input$ClustLevels,output_4_input$NombreClusters,output_4_input$VarInter, output_4_input$BaseDatosEstacionesClust, output_3_input$BaseRegistrosPr, output_3_input$z,output_3_input$Hc, country = countryiso)
-    remove_modal_spinner()
-    Output_f4(output4)
-    
-  })
+  # observeEvent(input$Runs5, {
+  #   
+  #   if(length(input$filemap) > 1 )
+  #     
+  #   {
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #     req(input$filemap)
+  #     shpdf <- input$filemap
+  #     tempdirname <- dirname(shpdf$datapath[1])
+  #     
+  #     # Rename files
+  #     for (i in 1:nrow(shpdf)) {
+  #       file.rename(
+  #         shpdf$datapath[i],
+  #         paste0(tempdirname, "/", shpdf$name[i])
+  #       )
+  #     }
+  #     
+  #     countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
+  #     countryiso = tools::file_path_sans_ext(countryiso)
+  #     
+  #   }
+  #   else{
+  #     countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+  #   }
+  #   #output4 <- regional_frequency_analysis(output_3$ClustLevels,output_3$NombreClusters,output_3$VarInter, output_3$BaseDatosEstacionesClust, output_2$BaseRegistrosPr, output_2$z,output_3$Hc)
+  #   show_modal_spinner(text=paste0("Step 4: Working in FREQUENCY/QUANTIL/RETURN PERIOD ESTIMATIONWorking in variables and indices from ",input$ddata," with name ", countryiso )) # show the modal window
+  #   output_3_input <- Output_f2()
+  #   output_4_input <- Output_f3()
+  #   output4 <- regional_frequency_analysis(output_4_input$ClustLevels,output_4_input$NombreClusters,output_4_input$VarInter, output_4_input$BaseDatosEstacionesClust, output_3_input$BaseRegistrosPr, output_3_input$z,output_3_input$Hc, country = countryiso)
+  #   remove_modal_spinner()
+  #   Output_f4(output4)
+  #   
+  # })
   
 }
 

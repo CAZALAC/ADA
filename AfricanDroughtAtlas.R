@@ -47,7 +47,7 @@ source('DroughAtlasFunctions.R')
 # Option 2: "CHIRPS" from http://iridl.ldeo.columbia.edu resolution 0.25'
 # Clip_method: Rectangle or Shape
 
-database_creation(model="CRU", country = country, clip_method="Shape" )
+database_creation(model="CRU", country = country, clip_method="Rectangle" )
 
 # II. VARIABLES AND INDICES  CALCULATION --------------
 

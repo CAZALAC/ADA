@@ -495,13 +495,6 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     
     plot(Boundaries)
     
-    #Stations Database Generacion (BaseDatosEstaciones) for a given country ============
-    #country.rts=crop(pre.monthly.AFR,Boundaries)
-    #porque asi evito pedazos del area sin estaciones en mallas gruesas
-    ###################
-    ### ALGUNAS VECES GENERAR RASTER MAL CORTADOS 
-    ###
-    ####################
     if(clip_method == "Shape"){
       country.rts=crop(pre.monthly.AFR,polygons(Boundaries))
       country.rts=mask(country.rts,polygons(Boundaries))
@@ -1664,25 +1657,24 @@ if(st_bbox(pol1)$xmax < 0){
     }}
 #fix lat
 if(st_bbox(pol1)$ymin > 0){
-  if(st_bbox(pol1)$ymin < min(BaseMPMaskPlot@coords[1,])){
+  if(st_bbox(pol1)$ymin < min(BaseMPMaskPlot@coords[,2])){
     BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
   }}
 
 if(st_bbox(pol1)$ymax > 0){
-  if(st_bbox(pol1)$ymax > max(BaseMPMaskPlot@coords[1,])){
+  if(st_bbox(pol1)$ymax > max(BaseMPMaskPlot@coords[,2])){
     BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
   }}
 
 if(st_bbox(pol1)$ymin < 0){
-  if(st_bbox(pol1)$ymin > min(BaseMPMaskPlot@coords[1,])){
+  if(st_bbox(pol1)$ymin < min(BaseMPMaskPlot@coords[,2])){
     BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
   }}
 
 if(st_bbox(pol1)$ymax < 0){
-  if(st_bbox(pol1)$ymax < max(BaseMPMaskPlot@coords[1,])){
+  if(st_bbox(pol1)$ymax > max(BaseMPMaskPlot@coords[,2])){
     BaseMPMaskPlot@bbox <- as.matrix(extent(pol1))
   }}
-
 
   
 
