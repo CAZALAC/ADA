@@ -292,7 +292,7 @@ voronoipolygons <- function(x) {
   if (.hasSlot(x, 'coords')) {
     crds <- x@coords  
   } else crds <- x
-  z <- deldir(crds[,1], crds[,2])
+  z <- deldir(crds[,1], crds[,2], rw=c(st_bbox(x)$xmin,st_bbox(x)$xmax,st_bbox(x)$ymin,st_bbox(x)$ymax))
   w <- tile.list(z)
   polys <- vector(mode='list', length=length(w))
   for (i in seq(along=polys)) {
@@ -301,6 +301,8 @@ voronoipolygons <- function(x) {
     polys[[i]] <- Polygons(list(Polygon(pcrds)), ID=as.character(i))
   }
   SP <- SpatialPolygons(polys)
+  plot(SP)
+  
   voronoi <- SpatialPolygonsDataFrame(SP, data=data.frame(x=crds[,1],
                                                           y=crds[,2], row.names=sapply(slot(SP, 'polygons'), 
                                                                                        function(x) slot(x, 'ID'))))
@@ -1417,7 +1419,7 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
 
 period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, BaseBaseRegiones, ResumeTable, BaseMediaCompleta, BaseProporCeros, Basep0bias, Baserfitdist, Baserfitpara){
   
-  #debug BaseSummaryStatistics = output5$BaseSummaryStatistics; BaseDatosEstacionesClust = output5$BaseDatosEstacionesClust; BaseBaseRegiones = output5$BaseBaseRegiones; ResumeTable = output5$ResumeTable
+  #debug BaseSummaryStatistics = output6$BaseSummaryStatistics; BaseDatosEstacionesClust = output6$BaseDatosEstacionesClust; BaseBaseRegiones = output6$BaseBaseRegiones; ResumeTable = output6$ResumeTable
   # These are the L-moments of the Variable of Interest (not necessarily annual precipitation)
   #These are the L-moments of the non zero records
   lmom.df=data.frame(BaseSummaryStatistics[[1]][,,1])
@@ -1693,6 +1695,7 @@ if(st_bbox(pol1)$ymax < 0){
   Thiessen<-spCbind(Thiessen, data.frame(BaseMPMaskPlot))
   Thiessen <- Thiessen[,!(names(Thiessen) %in% c("optional"))]
   Thiessen <- Thiessen[,-c(1,2)]
+
   plot(Thiessen)
   ##########################
   ##########################

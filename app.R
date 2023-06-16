@@ -4,7 +4,7 @@ library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para m
 library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
 library(maptools);library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
 library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
-library(sf);library(circular);library(reshape);library(deldir)
+library(sf);library(circular);library(reshape);library(deldir);library(shinyalert)
 
 workdir <- here()
 setwd(workdir)
@@ -559,8 +559,12 @@ server <- function(input, output) {
     stations <- read.csv(paste0(countryiso,"/BaseDatosEstaciones.csv", sep=""))
     #ploteamos
     showNotification(paste("Stations:",length(unique(stations$id_station)), " stations detected!"))
-    
-    show_modal_spinner(text=paste0("Step 2 ",input$ddata," with name ", countryiso )) # show the modal window
+    if(length(unique(stations$id_station)) < 14){
+      stations_message = " At least 14 stations are needed to run this script, it may fail."
+    } else{
+      stations_message = " The number of stations is enough to run the script."
+    }
+    show_modal_spinner(text=paste0("Step 2 ",input$ddata," with name ", countryiso, ", Stations: ",length(unique(stations$id_station) ), stations_message )) # show the modal window
     output_2 <- step2_variable_calculation(country =  countryiso)
     remove_modal_spinner()
     
@@ -719,7 +723,12 @@ server <- function(input, output) {
     #rp legend colors
     minrp <- min(c(r@data@min,r05@data@min,r06@data@min,r07@data@min,r08@data@min,r09@data@min))
     maxrp <- max(c(r@data@max,r05@data@max,r06@data@max,r07@data@max,r08@data@max,r09@data@max))
-    rangodatos <- seq(minrp,maxrp,length.out=15)
+    
+    if(minrp < 0){
+      minrp <- 0
+    }
+    
+    rangodatos <- seq(minrp,maxrp,length.out=10)
     pal <- colorNumeric("Blues", rangodatos,
                         na.color = "transparent")
     
@@ -742,6 +751,7 @@ server <- function(input, output) {
     minrp2 <- min(c(EstQuant_1_in_2yr@data@min,EstQuant_1_in_5yr@data@min,EstQuant_1_in_10yr@data@min,EstQuant_1_in_20yr@data@min,EstQuant_1_in_30yr@data@min,EstQuant_1_in_40yr@data@min,EstQuant_1_in_50yr@data@min,EstQuant_1_in_60yr@data@min,EstQuant_1_in_70yr@data@min,EstQuant_1_in_80yr@data@min,EstQuant_1_in_90yr@data@min,EstQuant_1_in_100yr@data@min))
     maxrp2 <- max(c(EstQuant_1_in_2yr@data@max,EstQuant_1_in_5yr@data@max,EstQuant_1_in_10yr@data@max,EstQuant_1_in_20yr@data@max,EstQuant_1_in_30yr@data@max,EstQuant_1_in_40yr@data@max,EstQuant_1_in_50yr@data@max,EstQuant_1_in_60yr@data@max,EstQuant_1_in_70yr@data@max,EstQuant_1_in_80yr@data@max,EstQuant_1_in_90yr@data@max,EstQuant_1_in_100yr@data@max))
     rangodatos2 <- seq(minrp2,maxrp2,length.out=5)
+    
     pal2 <- colorNumeric("YlOrRd", rangodatos2,
                         na.color = "transparent")
     
