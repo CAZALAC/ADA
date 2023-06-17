@@ -39,8 +39,8 @@ ui <- fluidPage(
                  #actionButton(inputId = "Runs5", label = "Run Step 5"),
                  #actionButton(inputId = "Runs6", label = "Run Step 6"),
                  #actionButton(inputId = "Runs7", label = "Run Step 7"),
-                 
-                 actionButton(inputId = "RunsA", label = "Run Steps 2-7"),
+                 actionButton(inputId = "Runs2", label = "Run Steps 2-7"),
+                 actionButton(inputId = "RunsA", label = "Run All"),
                  useShinyjs(),
                  actionButton("refresh", "Refresh"),
 
@@ -85,7 +85,7 @@ ui <- fluidPage(
              sidebarLayout(
                sidebarPanel(
                  selectInput("clipping", "Clipping Method", c("Rectangle","Shape")),
-                 p("For CRU only. CHIRPS only has the rectangle option available."),
+                 p("The Shape option only occupies stations that are within the area of interest. The rectangle option uses the extend to generate a rectangle with 5% margin and obtain information close to the study area."),
                  numericInput("maxstations", "Max. Stations:", 1000, min = 1, max = 10000),
                  p("Max number of virtual stations to generate."),
                  

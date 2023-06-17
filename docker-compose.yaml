@@ -1,0 +1,12 @@
+version: '0.1'
+
+services:
+ 
+    ada:
+        build: .
+        ports:
+            - 8787:8787
+        enviroment:
+            PASSWORD: "cazalac2023p"
+        volumes:
+            - ctemporal:/home/rstudio/ADA

@@ -667,7 +667,14 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     
     
     #Se usan los l?mites del mapa para recortar la base de datos
-    mapa<-Boundaries
+    
+     if(clip_method == "Shape"){
+       mapa <- Boundaries
+     } else {
+       mapa <- sps
+     }
+    
+    
     
     #Crear shapefile de puntos a partir de lonlat (corresponde a todas las estaciones virtuales, o sea, el rect?ngulo)
     est_cuadro <- data.frame(lonlat)
@@ -678,7 +685,8 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     
     #Se edita el archivo lonlat para seleccionar aquellos puntos que est?n dentro del l?mite pa?s
     est_selec <- est_cuadro[mapa,] #perfecto, se guarda
-    
+    plot(est_selec)
+
     #Se obtiene un archivo (dataframe) lonlat con los puntos seleccionados
     est_selecDF <- data.frame(est_selec)
     
@@ -722,8 +730,10 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     
     #...........................................
     # Exportar datos como txt
-    
     dir.create(paste0(getwd(),"/est_procesadas/"))
+    
+    #fix by pablo, elimina columnas enteras que tengan na
+    lista_est <- Filter(function(x)!all(is.na(x)), lista_est)
     
     for (m in 1:length(lista_est)){
       print(paste0("estacion ", m, " de ",length(lista_est)))
@@ -802,7 +812,7 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
 
 
 step2_variable_calculation <- function(country = country){
-  #country="BWA"
+  #country="DZA"
   #setwd(workdir)
   setwd(paste0("./", country)) #changed slashes
   #getwd()  
@@ -996,12 +1006,6 @@ step2_variable_calculation <- function(country = country){
   
   BaseDatosEstaciones<-join(BaseDatosEstaciones,BaseDatosIndices,by="id_station") # Ac? uno las dos bases de datos a nivel de estaciones solamente, no de todos los registros. Contiene los valores medios
   
-  #Here an updated version of Stations DataBase is saved
-  #p.rojas: eliminado para mejorar la velocidad
-  #write.csv(BaseDatosEstaciones,"BaseDatosEstaciones.csv",row.names=FALSE)
-  #remove(BaseDatosEstaciones)
-  #BaseDatosEstaciones<-read.csv("BaseDatosEstaciones.csv",header=T,sep=",")
-  #head(BaseDatosEstaciones,5)
   
   #...................................................................................................................
   #                                     Trend, serial correlation, Mann-Kendall and Sen slope calculation
