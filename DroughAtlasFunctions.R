@@ -288,11 +288,16 @@ H1ZDi=function (y,Nsim)
 # Function 3. Function to compute Voronoi maps
 
 voronoipolygons <- function(x) {
-
+  #plot(BaseMPMaskPlot)
+#x <- BaseMPMaskPlot
   if (.hasSlot(x, 'coords')) {
     crds <- x@coords  
   } else crds <- x
   z <- deldir(crds[,1], crds[,2], rw=c(st_bbox(x)$xmin,st_bbox(x)$xmax,st_bbox(x)$ymin,st_bbox(x)$ymax))
+  #revisamos si coincide el numero de puntos, sino cambiamos rw
+  if(z$n.data != length(crds[,1])){
+    z <- deldir(crds[,1], crds[,2])
+  }
   w <- tile.list(z)
   polys <- vector(mode='list', length=length(w))
   for (i in seq(along=polys)) {
@@ -414,7 +419,7 @@ randomSample = function(df,n) {
 database_creation <- function(model = "CRU", country = "BWA", clip_method="Rectangle", maxstations=1000) {
   print(clip_method)
   # BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
-  # debug: model = "CHIRPS"; country = "BWA"; clip_method="Rectangle"
+  # debug: model = "CHIRPS"; country = "BEN"; clip_method="Rectangle"
   if(model=="CRU"){
     # Optional Config Setup, Country Code, Shape and raster creation =================
     workdir <- here()
@@ -733,8 +738,8 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     dir.create(paste0(getwd(),"/est_procesadas/"))
     
     #fix by pablo, elimina columnas enteras que tengan na
-    lista_est <- Filter(function(x)!all(is.na(x)), lista_est)
-    
+    lista_est <- Filter(function(x)!all(is.na(x$prcp_chirps)), lista_est)
+
     for (m in 1:length(lista_est)){
       print(paste0("estacion ", m, " de ",length(lista_est)))
       
@@ -742,9 +747,11 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
       write.table(export, paste0(getwd(),"/est_procesadas/", names(lista_est)[m], "_latam.txt"), sep =";", row.names = FALSE)
     }
     
-    
     # Se exporta la metadata (Estaciones virtuales)
     metaexp <- est_selecDF[,c(3,1,2)]
+    #si se encuentra dentro de las filtradas sin nan
+    metaexp[metaexp$ID %in% names(lista_est),]
+    
     colnames(metaexp) <- c("station_id", "lon", "lat")
     
     write.table(metaexp, paste0(getwd(),"/est_procesadas/","metadata.txt"), sep = ";", row.names = FALSE)
@@ -763,19 +770,21 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     BaseDatosRegistros=data.frame(id_station=rep(latam.list[1],36),
                                   Year=1981:2016,
                                   matrix(EstacionesLong[[1]][,2],ncol=12,byrow=T))
-    
-    for (k in 2:length(latam.list)){
-      bd=data.frame(id_station=rep(latam.list[k],36),
-                    Year=1981:2016,
-                    matrix(EstacionesLong[[k]][,2],ncol=12,byrow=T))
-      BaseDatosRegistros=rbind(BaseDatosRegistros,bd)
-    }
-    
+
+        for (k in 2:length(latam.list)){
+        bd=data.frame(id_station=rep(latam.list[k],36),
+                      Year=1981:2016,
+                      matrix(EstacionesLong[[k]][,2],ncol=12,byrow=T))
+        BaseDatosRegistros=rbind(BaseDatosRegistros,bd)
+            }
+
     colnames(BaseDatosRegistros)[3:14]=month.abb
     
     # CORRECCION DE CEROS. TODOS LOS CEROS SON REEMPLAZADOS POR UN VALOR RANDOM UNIF ENTRE 0 Y 1
     
     BaseDatosRegistros <- zero_correction(BaseDatosRegistros)
+    
+    
     
     #row.names(BaseRegistrosPr)=NULL
     write.csv(BaseDatosRegistros,"BaseDatosRegistros.csv",row.names=FALSE)
@@ -785,6 +794,8 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     BaseDatosEstaciones=read.csv(paste0(getwd(),"/est_procesadas/metadata.txt"),sep=";",header=TRUE)
     colnames(BaseDatosEstaciones)[1]="id_station"
     row.names(BaseDatosEstaciones)=NULL
+    BaseDatosEstaciones = BaseDatosEstaciones[BaseDatosEstaciones$id_station %in% names(lista_est),]
+    
     if (dim(BaseDatosEstaciones)[1]>maxstations){
       BaseDatosEstaciones=randomSample(BaseDatosEstaciones,maxstations)
     } else {
@@ -1970,15 +1981,16 @@ if(st_bbox(pol1)$ymax < 0){
 
 
 exploratory <- function(BaseDatosEstacionesClust, country, VarInter="CumSumDec"){
-  #debug BaseDatosEstacionesClust <- output4$BaseDatosEstacionesClust; VarInter="CumSumDec"
+  #debug BaseDatosEstacionesClust <- output5$BaseDatosEstacionesClust; VarInter="CumSumDec"
   #################################################################################################################
   ##################################################################################################################
   
   #Several plots showing main charateristics of the stations in the specified region
   #revisar si se debe dejar como opción
   #se deja en primera region, ya que la region 3 a veces genera errores
-  region.of.interest=unique(BaseDatosEstacionesClust$ClustReg_adapt)[1] #Some of the available regions in ClustReg_adapt or a number between 1 and ClustLevels
-  
+  for (regoi in unique(BaseDatosEstacionesClust$ClustReg_adapt) ){
+  #region.of.interest=unique(BaseDatosEstacionesClust$ClustReg_adapt)[1] #Some of the available regions in ClustReg_adapt or a number between 1 and ClustLevels
+  region.of.interest  <- regoi
   #VarInter<-"CumSumDec"
   ListadoEstaciones<-sqldf(paste("select id_station from BaseDatosEstacionesClust where ClustReg_adapt=='",region.of.interest,"'",sep=""))
   LEst<-levels(factor(ListadoEstaciones["id_station"][,]))
@@ -2024,7 +2036,7 @@ exploratory <- function(BaseDatosEstacionesClust, country, VarInter="CumSumDec")
   }
   dev.off()
   # ..............................................END OF BLOCK IV .................................................
-  
+  }
 }
 
 

@@ -85,7 +85,7 @@ ui <- fluidPage(
              sidebarLayout(
                sidebarPanel(
                  selectInput("clipping", "Clipping Method", c("Rectangle","Shape")),
-                 p("The Shape option only occupies stations that are within the area of interest. The rectangle option uses the extend to generate a rectangle with 5% margin and obtain information close to the study area."),
+                 p("The Shape option only occupies stations that are within the area of interest. The rectangle option uses the extend to generate a rectangle with 5% margin."),
                  numericInput("maxstations", "Max. Stations:", 1000, min = 1, max = 10000),
                  p("Max number of virtual stations to generate."),
                  
@@ -561,7 +561,7 @@ server <- function(input, output) {
     } else{
       stations_message = " The number of stations is enough to run the script."
     }
-    show_modal_spinner(text=paste0("Step 2 ",input$ddata," with name ", countryiso, ", Stations: ",length(unique(stations$id_station) ), stations_message )) # show the modal window
+    show_modal_spinner(text=paste0("Step 2 ",input$ddata," with name ", countryiso, ", Stations: ",length(unique(stations$id_station) ),".", stations_message )) # show the modal window
     output_2 <- step2_variable_calculation(country =  countryiso)
     remove_modal_spinner()
     
@@ -581,12 +581,12 @@ server <- function(input, output) {
     output5 <- period_estimation(output4$BaseSummaryStatistics, output4$BaseDatosEstacionesClust, output4$BaseBaseRegiones, output4$ResumeTable, output4$BaseMediaCompleta, output4$BaseProporCeros, output4$Basep0bias, output4$Baserfitdist, output4$Baserfitpara)
     remove_modal_spinner()
     
-    show_modal_spinner(text=paste0("mapping... ",input$ddata," with name ", countryiso )) # show the modal window
+    show_modal_spinner(text=paste0("Creating rasters...",input$ddata," with name ", countryiso )) # show the modal window
     period_mapping(output4$ResumeTable, output5$BaseModelMapCor, countryiso, output_2$Boundaries)
     remove_modal_spinner()
     
     
-    show_modal_spinner(text=paste0("plotting... ", countryiso )) # show the modal window
+    show_modal_spinner(text=paste0("Plotting... ", countryiso )) # show the modal window
     
     states2 <- sf::st_read("randomsample.shp")
     r <- raster('Mapas/RP1.tif')

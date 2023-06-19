@@ -28,7 +28,7 @@ library(sf);library(circular);library(reshape);library(deldir)
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="DZA"
+country="BEN"
 
 
 #  Optinal Config =======================
@@ -47,7 +47,7 @@ source('DroughAtlasFunctions.R')
 # Option 2: "CHIRPS" from http://iridl.ldeo.columbia.edu resolution 0.25'
 # Clip_method: Rectangle or Shape
 
-database_creation(model="CHIRPS", country = country, clip_method="Shape" )
+database_creation(model="CHIRPS", country = country, clip_method="Recantagle" )
 
 # II. VARIABLES AND INDICES  CALCULATION --------------
 
