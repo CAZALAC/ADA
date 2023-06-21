@@ -4,7 +4,7 @@ requiredPackages=c("raster","rgdal","countrycode","rts","ncdf4","HelpersMG",
                    "zoo","Kendall","zyp","car","gtools",
                    "rgeos","lmom","lmomRFA","sp","rrcov","nsRFA","ModelMap",
                    "maptools","stringr","rasterVis","hydroGOF","randomForest","progress",
-                   "gtools","here","chron","lattice","RColorBrewer","geodata"
+                   "gtools","here","chron","lattice","RColorBrewer","geodata",
                    "sf","circular","reshape","deldir","shiny","leaflet","shinybusy","shinyjs","geodata", "shinyalert")
 
 for(p in requiredPackages){

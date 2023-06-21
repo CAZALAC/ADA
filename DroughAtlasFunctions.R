@@ -1685,13 +1685,15 @@ if(st_bbox(pol1)$ymax < 0){
 
   
 
+  shapefile(BaseMPMaskPlot, filename="BaseMPMaskPlot", overwrite=TRUE)
 
-  writeSpatialShape(BaseMPMaskPlot, "BaseMPMaskPlot")
+  #deprecated: writeSpatialShape(BaseMPMaskPlot, "BaseMPMaskPlot")
   #OPcion Thiessen con Voronoi dentro de R
   Thiessen <- voronoipolygons(BaseMPMaskPlot)
   
-  
-  Thiessen<-spCbind(Thiessen, data.frame(BaseMPMaskPlot))
+  #deprecated
+  #Thiessen<-spCbind(Thiessen, data.frame(BaseMPMaskPlot))
+  Thiessen<-terra::cbind2(Thiessen, data.frame(BaseMPMaskPlot))
   Thiessen <- Thiessen[,!(names(Thiessen) %in% c("optional"))]
   Thiessen <- Thiessen[,-c(1,2)]
 
@@ -1701,7 +1703,9 @@ if(st_bbox(pol1)$ymax < 0){
   #### REVISSAR
   ###########################
   ##########################
-  writeSpatialShape(Thiessen, "Thiessen.shp")
+  shapefile(Thiessen, filename="Thiessen.shp", overwrite=TRUE)
+  
+  #deprecated writeSpatialShape(Thiessen, filename="Thiessen.shp" )
   #rsaga.geoprocessor("shapes_points",16,list(POINTS="BaseMPMaskPlot.shp",POLYGONS="Thiessen",FRAME=4))
   #getinfo.shape(paste0(country,".shp"))# Este se edita y guarda aparte con SAGA
   #getinfo.shape("Thiessen.shp") 
@@ -1718,7 +1722,9 @@ if(st_bbox(pol1)$ymax < 0){
   pol2  <- Thiessen
   raster::crs(pol2) <- raster::crs(pol1)
   obj <- raster::intersect(pol1, pol2)
-  writeSpatialShape(obj, "CutThiessen.shp")
+  shapefile(obj, filename="CutThiessen.shp", overwrite=TRUE)
+  #deprecated
+  #writeSpatialShape(obj, "CutThiessen.shp")
    
   #Plot 
   CutThiessen <- obj
@@ -2031,7 +2037,7 @@ exploratory <- function(BaseDatosEstacionesClust, country, VarInter="CumSumDec")
   }
 }
 
-#this controls the input resol parameter in shiny
+#this format the input resol parameter in shiny
 inputshinnyresol <- function(x){
   if(x == "0.05 degrees"){
     return("05")
