@@ -416,7 +416,7 @@ randomSample = function(df,n) {
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
 
-database_creation <- function(model = "CRU", country = "BWA", clip_method="Rectangle", maxstations=1000) {
+database_creation <- function(model = "CRU", country = "BWA", clip_method="Rectangle", maxstations=1000, resol="25") {
   print(clip_method)
   # BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
   # debug: model = "CHIRPS"; country = "BEN"; clip_method="Rectangle"
@@ -618,7 +618,9 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     #If download fail, then copy paste url in a web browser and download the data.nc file manually
     #After download, put the file into the country's folder.
     # Download netCDF file
-    url=paste0('http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/.daily-improved/.global/.0p25/.prcp/X/',xmin,'/',xmax,'/RANGEEDGES/Y/',ymin,'/',ymax,'/RANGEEDGES/T/(Jan%201981)/(Dec%202016)/RANGE/weeklytomonthly/data.nc')
+    
+    url=paste0('http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/.daily-improved/.global/.0p',resol,'/.prcp/X/',xmin,'/',xmax,'/RANGEEDGES/Y/',ymin,'/',ymax,'/RANGEEDGES/T/(Jan%201981)/(Dec%202016)/RANGE/weeklytomonthly/data.nc')
+    
     dfile=c("data.nc")      
     print(url)
     #Additional time for slow connections and if DL takes time to process
@@ -816,8 +818,9 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     setwd(workdir)
     
   }
+
   else{
-    message("Error selecting the model. Only the options CRU and CHIRPS are available.")
+    message("Error selecting the model.")
   }
 }
 
@@ -2039,6 +2042,14 @@ exploratory <- function(BaseDatosEstacionesClust, country, VarInter="CumSumDec")
   }
 }
 
-
+#this controls the input resol parameter in shiny
+inputshinnyresol <- function(x){
+  if(x == "0.05 degrees"){
+    return("05")
+  }
+  else{
+    return("25")
+  }
+}
 
 

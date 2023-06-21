@@ -28,11 +28,6 @@ library(sf);library(circular);library(reshape);library(deldir)
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="CPV"
-
-
-#  Optinal Config =======================
-
 #workdir = "C:/Users/pablo/OneDrive/Escritorio/CAZALAC/ADA3/ADA/"
 workdir <- here()
 setwd(workdir)
@@ -40,15 +35,19 @@ setwd(workdir)
 # Load Functions -------------------
 source('DroughAtlasFunctions.R')
 
+cntry_codes <- country_codes()
+for (country in cntry_codes[cntry_codes$continent == "Africa",]$ISO3){
+#  Optinal Config =======================
+
+
 # I. DATABASE CONSTRUCTION ------------
 # Block i.a. database construction from CRU 3.21 or CHIRPS
 # Choose one of the two model options based on country size    
 # Option 1: "CRU"  CRU 3.21
 # Option 2: "CHIRPS" from http://iridl.ldeo.columbia.edu resolution 0.25'
 # Clip_method: Rectangle or Shape
-# Resol: only for CHIRPS, can be 25 for 0.25 degrees or 05 for 0.05 degrees which corresponds to the pixel size, it is recommended to use 05 only in small areas.
 
-database_creation(model="CHIRPS", country = country, clip_method="Recantagle", resol="25" )
+database_creation(model="CHIRPS", country = country, clip_method="Recantagle" )
 
 # II. VARIABLES AND INDICES  CALCULATION --------------
 
@@ -72,4 +71,4 @@ output6 <- period_estimation(output5$BaseSummaryStatistics, output5$BaseDatosEst
 
 # VII: FREQUENCY/RETURN PERIOD/QUANTIL MAPPING ------------------
 period_mapping(output5$ResumeTable, output6$BaseModelMapCor, country, output_2$Boundaries)
-
+}
