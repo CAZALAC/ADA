@@ -332,7 +332,7 @@ Mapping.Function <- function(x, filename,model,folder.mapas) {
     out <- writeValues(out, v.pred, r)
     print(paste("Printing row=",r,sep=""))}
   out <- writeStop(out)
-  writeRaster(out,filename=paste0(getwd(),folder.mapas,"/",filename,".sdat"),format="SAGA", overwrite=TRUE,NAflag=-999)}
+  terra::writeRaster(out,filename=paste0(getwd(),folder.mapas,"/",filename,".sdat"),filetype="SAGA", overwrite=TRUE,NAflag=-999)}
 
 # Function 6. Function to extract slope and P value from a linear regression model
 lm.coeficients <- function (modelobject) {
@@ -345,8 +345,7 @@ lm.coeficients <- function (modelobject) {
   salida<-list(slope=s,Pvalue=p)
   return(salida)}
 
-
-
+#get country from geodata
 get_country_shape  <- function(country){
   sf_objet <- sf::st_as_sf(geodata::gadm(country=country, level=0, path=tempdir()))
   #legacy
@@ -586,22 +585,12 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     sps <- shape_return$sps
     rm(shape_return)
     
-    #BoundariesAFR = raster::shapefile("AfricaDA.shp")
-    #raster::projection(BoundariesAFR)="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
-    
     #Create working directory and set working directory
     dir.create(paste0("./",country,sep=""))
     setwd(paste0("./",country,sep=""))
     
     shapefile(Boundaries, filename=country, overwrite=TRUE)
-    #writeOGR(Boundaries, dsn = '.', layer = country, driver = "ESRI Shapefile",overwrite_layer=TRUE)
-    
-    #rm(Boundaries)
-    #save.image(paste0("C:/Users/jnune/Documents/AtlasSequiaALCCRU/",country,"/",country,".RData"))
-    ##                CORREGIR MAPA MANUALMENTE
-    #.......................................................................
-    
-    
+
     #Boundaries=readOGR(".",country)   #Obtenido de http://www.maplibrary.org/library/stacks/Africa/index.htm
     plot(Boundaries)
     Bound.Pol=extent(Boundaries)
@@ -1866,7 +1855,7 @@ if(st_bbox(pol1)$ymax < 0){
     Mapping.Function(brQ,Predictant,mcal,folder.mapas) #Acá aparece un error
     FinalQMap<-mask(raster(paste0(getwd(),folder.mapas,"/",Predictant,".sdat")),polygons(Mask))
     projection(FinalQMap)="+proj=longlat +ellps=WGS84 + datum=WGS84"
-    writeRaster(FinalQMap,filename=paste0(getwd(),folder.mapas,"/",Predictant,".tif"),format="GTiff", overwrite=TRUE,NAflag=-999)
+    terra::writeRaster(FinalQMap,filename=paste0(getwd(),folder.mapas,"/",Predictant,".tif"),filetype="GTiff", overwrite=TRUE,NAflag=-999)
     plot(FinalQMap,main=Predictant)
   }
   dev.off()
@@ -1963,7 +1952,7 @@ if(st_bbox(pol1)$ymax < 0){
     Mapping.Function(brQ,Predictant,mcalRP,folder.mapas)
     FinalRPMap<-mask(raster(paste0(getwd(),folder.mapas,"/",Predictant,".sdat")),polygons(Mask))
     projection(FinalRPMap)="+proj=longlat +ellps=WGS84 + datum=WGS84"
-    writeRaster(FinalRPMap,filename=paste0(getwd(),folder.mapas,"/",Predictant,".tif"),format="GTiff", overwrite=TRUE,NAflag=-999)
+    terra::writeRaster(FinalRPMap,filename=paste0(getwd(),folder.mapas,"/",Predictant,".tif"),filetype="GTiff", overwrite=TRUE,NAflag=-999)
     plot(FinalRPMap,main=Predictant)
   }# Finalizado Generaci?n de Mapas de Periodo de Retorno
   dev.off()

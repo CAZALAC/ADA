@@ -17,18 +17,18 @@
 # Libraries ----------------------
 library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
 library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(corrplot);library(sqldf)
-library(zoo);library(Kendall);library(zyp);library(car);library(gtools);# Para mantener orden texto-numero en id_station
+library(zoo);library(Kendall);library(zyp);library(car);library(gtools);
 library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
-library(maptools);library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);#Check proper installation of SAG-GIS and RSAGA
+library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);
 library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
 library(sf);library(circular);library(reshape);library(deldir)
-#library(RSAGA);
+
 # Config ----------------------
 #Option 1: Replace with the corresponding three ISO letters. In this case, Botswana should be 
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="CPV"
+country="BWA"
 
 
 #  Optinal Config =======================
