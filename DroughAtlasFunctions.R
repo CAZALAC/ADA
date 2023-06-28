@@ -353,7 +353,7 @@ get_country_shape  <- function(country){
   return(sf_objet)
 }
 
-#Functions =====================================
+#get country list legacy =====================================
 country_list <- function(country){
   ISO.codes=read.csv("CountryISOCodes.csv",sep=";")
   Afr.country.list=as.character(ISO.codes$ThreeLetter)
@@ -415,8 +415,8 @@ randomSample = function(df,n) {
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
 
-database_creation <- function(model = "CRU", country = "BWA", clip_method="Rectangle", maxstations=1000, resol="25") {
-  print(clip_method)
+database_creation <- function(model = "CRU", country = "BWA",  maxstations=10000, resol="25") {
+  clip_method="Shape"
   # BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
   # debug: model = "CHIRPS"; country = "BEN"; clip_method="Rectangle"
   if(model=="CRU"){
@@ -693,7 +693,7 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     lista_est <- list()
     for (i in 1:nrow(est_selecDF)){ #Continuar desde ac?...
       
-      print(paste0("estacion ",i," de ",nrow(est_selecDF)))
+      print(paste0("station ",i," of ",nrow(est_selecDF)))
       
       lista_est[[i]] <- DF_est
       names(lista_est)[i] <- as.character(est_selecDF[i,3])
@@ -706,7 +706,7 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     
     l = 1
     for (j in 1:dim(prcp_array)[3]){ #ac? no es array brick, OJO
-      print(paste0("mes ",j," de ",dim(prcp_array)[3]))
+      print(paste0("month ",j," of ",dim(prcp_array)[3]))
       
       raster_uni <- prcp_array[,,j]
       raster_uni <- raster(t(raster_uni), xmn = min(lon), xmx = max(lon), ymn = min(lat), ymx = max(lat))
@@ -732,7 +732,7 @@ database_creation <- function(model = "CRU", country = "BWA", clip_method="Recta
     lista_est <- Filter(function(x)!all(is.na(x$prcp_chirps)), lista_est)
 
     for (m in 1:length(lista_est)){
-      print(paste0("estacion ", m, " de ",length(lista_est)))
+      print(paste0("station ", m, " of ",length(lista_est)))
       
       export <- lista_est[[m]]
       write.table(export, paste0(getwd(),"/est_procesadas/", names(lista_est)[m], "_latam.txt"), sep =";", row.names = FALSE)

@@ -47,7 +47,7 @@ for (country in cntry_codes[cntry_codes$continent == "Africa",]$ISO3){
 # Option 2: "CHIRPS" from http://iridl.ldeo.columbia.edu resolution 0.25'
 # Clip_method: Rectangle or Shape
 
-database_creation(model="CHIRPS", country = country, clip_method="Recantagle", resol="25" )
+database_creation(model="CHIRPS", country = country, resol="25" )
 
   stationstest <- read.csv(paste0(country,"/BaseDatosEstaciones.csv", sep=""))
   if(length(unique(stationstest$id_station)) < 14){

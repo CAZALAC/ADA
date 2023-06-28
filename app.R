@@ -53,7 +53,7 @@ ui <- fluidPage(
              )           
              
     ),
-    tabPanel("Visualise Results", 
+    tabPanel("Visualize Results", 
              
              sidebarLayout(
                sidebarPanel(
@@ -77,9 +77,9 @@ ui <- fluidPage(
              
              sidebarLayout(
                sidebarPanel(
-                 selectInput("clipping", "Clipping Method", c("Rectangle","Shape")),
-                 p("The Shape option only occupies stations that are within the area of interest. The rectangle option uses the extend to generate a rectangle with 5% margin."),
-                 numericInput("maxstations", "Max. Stations:", 1000, min = 1, max = 10000),
+              #   selectInput("clipping", "Clipping Method", c("Rectangle","Shape")),
+              #   p("The Shape option only occupies stations that are within the area of interest. The rectangle option uses the extend to generate a rectangle with 5% margin."),
+                 numericInput("maxstations", "Max. Stations:", 10000, min = 1, max = 10000000),
                  p("Max number of virtual stations to generate."),
                  
                  
@@ -101,37 +101,18 @@ ui <- fluidPage(
 
 # server()
 server <- function(input, output) {
+  #numbers of virtual stations
+  n_stations <- reactiveValues()
 
+  
   #Get and print the numbers of stations 
   output$stations <- renderText({
     
-    # Name or shape detection
-    if(length(input$filemap) > 1 ){
-      req(input$filemap)
-      shpdf <- input$filemap
-      tempdirname <- dirname(shpdf$datapath[1])
-      # Rename files
-      for (i in 1:nrow(shpdf)) {
-        file.rename(
-          shpdf$datapath[i],
-          paste0(tempdirname, "/", shpdf$name[i])
-        )
-      }
-      countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
-      countryiso = tools::file_path_sans_ext(countryiso)
-      
-    }else{
-      countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+    if(!is_empty(n_stations$n)){
+      return(paste("Number of Stations:",n_stations$n, " detected!")) 
     }
     
     
-  if(file.exists(paste0(countryiso,"/BaseDatosEstaciones.csv", sep=""))){
-    try(stations <- read.csv(paste0(countryiso,"/BaseDatosEstaciones.csv", sep="")))
-    return(paste("Stations:",length(unique(stations$id_station)), " stations detected!")) 
-  } else {
-    return("Stations: No data")
-  }
-
   })
   
   observeEvent(input$refresh, {
@@ -142,7 +123,7 @@ server <- function(input, output) {
     boundariescountry <- get_country_shape(country=input$icountry_list) #raster::getData('GADM', country=countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c'), level=0)
     boundariescountry
   })
-  #hard codding, arreglar
+  #hard codding
   boundariescountry2 <- reactive({
     boundariescountry2 <- get_country_shape(country=input$icountry_list2) #raster::getData('GADM', country=countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c'), level=0)
     boundariescountry2
@@ -157,45 +138,53 @@ server <- function(input, output) {
       # shpdf is a data.frame with the name, size, type and
       # datapath of the uploaded files
       shpdf <- input$filemap
+      #from: https://community.rstudio.com/t/downloadhandler-error-shp-file/70118/15
       
-      # The files are uploaded with names
-      # 0.dbf, 1.prj, 2.shp, 3.xml, 4.shx
-      # (path/names are in column datapath)
-      # We need to rename the files with the actual names:
-      # fe_2007_39_county.dbf, etc.
-      # (these are in column name)
-      
-      # Name of the temporary directory where files are uploaded
+      previouswd <- getwd()
       tempdirname <- dirname(shpdf$datapath[1])
-      
-      # Rename files
-      for (i in 1:nrow(shpdf)) {
-        file.rename(
-          shpdf$datapath[i],
-          paste0(tempdirname, "/", shpdf$name[i])
-        )
+      setwd(tempdirname)
+      for(i in 1:nrow(shpdf)){
+        file.rename(shpdf$datapath[i], shpdf$name[i])
       }
+      setwd(previouswd)
       
-      # Now we read the shapefile with readOGR() of rgdal package
-      # passing the name of the file with .shp extension.
       
-      # We use the function grep() to search the pattern "*.shp$"
-      # within each element of the character vector shpdf$name.
-      # grep(pattern="*.shp$", shpdf$name)
-      # ($ at the end denote files that finish with .shp,
-      # not only that contain .shp)
 
       map <- raster::shapefile(paste(tempdirname,
                               shpdf$name[grep(pattern = "*.shp$", shpdf$name)],
                               sep = "/"))
       try(map <- spTransform(map, "+proj=longlat +datum=WGS84"), silent = TRUE)
       
+      if(input$ddata == "CRU"){
+        
+        virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
+        clipped_virtualstations <- raster::intersect(map,virtualstations)
+        #we get the numbers of stations
+        n_stations$n <- length(clipped_virtualstations@data[,1])
+        
+      }
+      if(input$ddata == "CHIRPS" & inputshinnyresol(input$resol)=="25"){
+        
+        virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
+        clipped_virtualstations <- raster::intersect(map,virtualstations)
+        #we get the numbers of stations
+        n_stations$n <- length(clipped_virtualstations@data[,1])
+      }
+      if(input$ddata == "CHIRPS" & inputshinnyresol(input$resol) =="05"){
+        virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
+        clipped_virtualstations <- raster::intersect(map,virtualstations)
+        #we get the numbers of stations
+        n_stations$n <- length(clipped_virtualstations@data[,1])
+      }
+      
       leaflet() %>%addTiles() %>%
         addPolygons(data= map, color = "#444444", weight = 1, smoothFactor = 0.5,
                     opacity = 0.5, fillOpacity = 0,
                     highlightOptions = highlightOptions(color = "white", weight = 2,
                                                         bringToFront = TRUE), group = "Boundaries")  %>%
-  addLayersControl(
+        addCircles(data = clipped_virtualstations, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
+        
+         addLayersControl(
     overlayGroups = c("Boundaries"),
     options = layersControlOptions(collapsed = FALSE)
   )
@@ -203,14 +192,42 @@ server <- function(input, output) {
     } else {
       
       states <- boundariescountry()
-
+      #states <- get_country_shape(country="BWA")
+      
+      
+      ####
+      ## count the number of dots
+      
+      if(input$ddata == "CRU"){
+        
+      virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
+      clipped_virtualstations <- raster::intersect(states,virtualstations)
+      #we get the numbers of stations
+      n_stations$n <- length(clipped_virtualstations@data[,1])
+      
+      }
+      if(input$ddata == "CHIRPS" & inputshinnyresol(input$resol)=="25"){
+        
+        virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
+        clipped_virtualstations <- raster::intersect(states,virtualstations)
+        #we get the numbers of stations
+        n_stations$n <- length(clipped_virtualstations@data[,1])
+      }
+      if(input$ddata == "CHIRPS" & inputshinnyresol(input$resol) =="05"){
+        virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
+        clipped_virtualstations <- raster::intersect(states,virtualstations)
+        #we get the numbers of stations
+        n_stations$n <- length(clipped_virtualstations@data[,1])
+      }
+      
+      
       
       m <- leaflet() %>%addTiles() %>%
         addPolygons(data= states, color = "#444444", weight = 1, smoothFactor = 0.5,
                     opacity = 0.5, fillOpacity = 0,
                     highlightOptions = highlightOptions(color = "white", weight = 2,
                                                         bringToFront = TRUE), group = "Boundaries") %>%
-        
+                    addCircles(data = clipped_virtualstations, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
         
         addLayersControl(
           overlayGroups = c("Boundaries"),
@@ -223,7 +240,7 @@ server <- function(input, output) {
   })
   
   
-  # Visualization map
+  # Visualization
   output$map2 <- renderLeaflet({
     if(length(input$filemap2) > 1 )
     {
@@ -232,35 +249,16 @@ server <- function(input, output) {
       
       # shpdf is a data.frame with the name, size, type and
       # datapath of the uploaded files
-      shpdf <- input$filemap2
+      shpdf <- input$filemap
+      #from: https://community.rstudio.com/t/downloadhandler-error-shp-file/70118/15
       
-      # The files are uploaded with names
-      # 0.dbf, 1.prj, 2.shp, 3.xml, 4.shx
-      # (path/names are in column datapath)
-      # We need to rename the files with the actual names:
-      # fe_2007_39_county.dbf, etc.
-      # (these are in column name)
-      
-      # Name of the temporary directory where files are uploaded
+      previouswd <- getwd()
       tempdirname <- dirname(shpdf$datapath[1])
-      
-      # Rename files
-      for (i in 1:nrow(shpdf)) {
-        file.rename(
-          shpdf$datapath[i],
-          paste0(tempdirname, "/", shpdf$name[i])
-        )
+      setwd(tempdirname)
+      for(i in 1:nrow(shpdf)){
+        file.rename(shpdf$datapath[i], shpdf$name[i])
       }
-      
-      # Now we read the shapefile with readOGR() of rgdal package
-      # passing the name of the file with .shp extension.
-      
-      # We use the function grep() to search the pattern "*.shp$"
-      # within each element of the character vector shpdf$name.
-      # grep(pattern="*.shp$", shpdf$name)
-      # ($ at the end denote files that finish with .shp,
-      # not only that contain .shp)
-      #map <- raster::shapefile("AfricaDA.shp")
+      setwd(previouswd)
       
       
       
@@ -343,7 +341,7 @@ server <- function(input, output) {
     }
     # Number of times we'll go through the loop
     show_modal_spinner(text=paste0("Creating Stations from ",input$ddata," with name ", countryiso )) # show the modal window
-    database_creation(model=input$ddata, country = countryiso, clip_method = input$clipping, maxstations = input$maxstations, resol=inputshinnyresol(input$resol)  )
+    database_creation(model=input$ddata, country = countryiso, maxstations = input$maxstations, resol=inputshinnyresol(input$resol)  )
     remove_modal_spinner() # remove it when done
     states2 <- sf::st_read(paste(countryiso,"randomsample.shp",sep = "/"))
     leafletProxy("map") %>%  addCircles(data = states2, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
@@ -386,7 +384,7 @@ server <- function(input, output) {
     
     show_modal_spinner(text=paste0("Step 1 ",input$ddata," with name ", countryiso )) # show the modal window
     # show the modal window
-    database_creation(model=input$ddata, country = countryiso, clip_method = input$clipping, maxstations = input$maxstations, resol=inputshinnyresol(input$resol)  )
+    database_creation(model=input$ddata, country = countryiso, maxstations = input$maxstations, resol=inputshinnyresol(input$resol)  )
     remove_modal_spinner()
     #get the number of stations
     stations <- read.csv(paste0(countryiso,"/BaseDatosEstaciones.csv", sep=""))

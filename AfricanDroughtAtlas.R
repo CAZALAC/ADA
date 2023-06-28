@@ -45,10 +45,9 @@ source('DroughAtlasFunctions.R')
 # Choose one of the two model options based on country size    
 # Option 1: "CRU"  CRU 3.21
 # Option 2: "CHIRPS" from http://iridl.ldeo.columbia.edu resolution 0.25'
-# Clip_method: Rectangle or Shape
 # Resol: only for CHIRPS, can be 25 for 0.25 degrees or 05 for 0.05 degrees which corresponds to the pixel size, it is recommended to use 05 only in small areas.
 
-database_creation(model="CHIRPS", country = country, clip_method="Recantagle", resol="25" )
+database_creation(model="CHIRPS", country = country, resol="25", maxstations=1000 )
 
 # II. VARIABLES AND INDICES  CALCULATION --------------
 
