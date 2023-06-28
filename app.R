@@ -249,7 +249,7 @@ server <- function(input, output) {
       
       # shpdf is a data.frame with the name, size, type and
       # datapath of the uploaded files
-      shpdf <- input$filemap
+      shpdf <- input$filemap2
       #from: https://community.rstudio.com/t/downloadhandler-error-shp-file/70118/15
       
       previouswd <- getwd()
@@ -322,8 +322,9 @@ server <- function(input, output) {
     {
       req(input$filemap)
       shpdf <- input$filemap
+      previouswd <- getwd()
       tempdirname <- dirname(shpdf$datapath[1])
-      
+      setwd(tempdirname)
       # Rename files
       for (i in 1:nrow(shpdf)) {
         file.rename(
@@ -331,7 +332,7 @@ server <- function(input, output) {
           paste0(tempdirname, "/", shpdf$name[i])
         )
       }
-      
+      setwd(previouswd)
       countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
       countryiso = tools::file_path_sans_ext(countryiso)
       
@@ -363,8 +364,9 @@ server <- function(input, output) {
       countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
       req(input$filemap)
       shpdf <- input$filemap
+      previouswd <- getwd()
       tempdirname <- dirname(shpdf$datapath[1])
-      
+      setwd(tempdirname)
       # Rename files
       for (i in 1:nrow(shpdf)) {
         file.rename(
@@ -372,7 +374,7 @@ server <- function(input, output) {
           paste0(tempdirname, "/", shpdf$name[i])
         )
       }
-      
+      setwd(previouswd)
       countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
       countryiso = tools::file_path_sans_ext(countryiso)
       
@@ -527,8 +529,9 @@ server <- function(input, output) {
       countryiso = countrycode(input$icountry_list2, origin = 'country.name', destination = 'iso3c')
       req(input$filemap2)
       shpdf <- input$filemap2
+      previouswd <- getwd()
       tempdirname <- dirname(shpdf$datapath[1])
-      
+      setwd(tempdirname)
       # Rename files
       for (i in 1:nrow(shpdf)) {
         file.rename(
@@ -536,7 +539,7 @@ server <- function(input, output) {
           paste0(tempdirname, "/", shpdf$name[i])
         )
       }
-      
+      setwd(previouswd)
       countryiso = shpdf$name[grep(pattern = "*.shp$", shpdf$name)] 
       countryiso = tools::file_path_sans_ext(countryiso)
       
