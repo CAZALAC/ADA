@@ -15,9 +15,9 @@ pre$x = ncvar_get(nc, "lon")
 pre$y = ncvar_get(nc, "lat")
 pre$z = ncvar_get(nc, "pre", start=c(300, 90, 829), count=c(213, 183, 552))#1970 a 2015, lon=-30.25 to 75.75 lat=-45.25 to 45.75
 # Just for Africa
-#xmin=lon[300];xmax=lon[300+213];ymin=lat[90];ymax=lat[90+183]
+xmin=lon[300];xmax=lon[300+213];ymin=lat[90];ymax=lat[90+183]
 #New version
-xmin=min(lon);xmax=max(lon);ymin=min(lat);ymax=max(lat)
+#xmin=min(lon);xmax=max(lon);ymin=min(lat);ymax=max(lat)
 
 # Create rasterstack with precipitation layers ==================
 pre.layers<-raster::stack()

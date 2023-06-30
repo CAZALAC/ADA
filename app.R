@@ -4,7 +4,8 @@ library(zoo);library(Kendall);library(zyp);library(car);library(gtools);
 library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
 library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);
 library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
-library(sf);library(circular);library(reshape);library(deldir);library(shinyalert);library(geodata)
+library(sf);library(circular);library(reshape);library(deldir);library(shinyalert);library(geodata);
+library(shinythemes)
 
 workdir <- here()
 setwd(workdir)
@@ -15,8 +16,12 @@ country_list <- country_list()
 datadownload <- c("CRU","CHIRPS")
 resolution <- c("0.25 degrees","0.05 degrees")
 # ui object
-ui <- fluidPage(
-  titlePanel(p("African Drought Atlas", style = "color:#3474A7")),
+ui <- fluidPage(theme = shinytheme("paper"),
+  titlePanel(
+    fluidRow(
+    column(7,  h2("African Drought Atlas")), 
+    column(4, img(height = 90, width = 350, src = "logos.png"))
+    )),
   
   tabsetPanel(
     tabPanel("Run", 
@@ -29,17 +34,17 @@ ui <- fluidPage(
                    multiple = TRUE,
                    accept = c(".shp", ".dbf", ".sbn", ".sbx", ".shx", ".prj")
                  ),
-                 tags$h5("or"),
+                 tags$h6("or"),
                  selectInput("icountry_list", "Select a Country", country_list),
                  selectInput(inputId = "ddata", "Data Source", datadownload ),
                  conditionalPanel(condition="input.ddata == 'CHIRPS'", 
                                   selectInput(inputId = "resol", "Resolution", resolution ),
                  ),
-                 actionButton(inputId = "Runs1", label = "Run Step 1"),
-                 actionButton(inputId = "Runs2", label = "Run Steps 2-7"),
-                 actionButton(inputId = "RunsA", label = "Run All"),
+                 actionButton(inputId = "Runs1", label = "Run Step 1", style= "width:220px;padding:5px;margin:5px"),
+                 actionButton(inputId = "Runs2", label = "Run Steps 2-7", style= "width:220px;padding:5px;margin:5px"),
+                 actionButton(inputId = "RunsA", label = "Run All", style= "width:220px;padding:5px;margin:5px"),
                  useShinyjs(),
-                 actionButton("refresh", "Refresh"),
+                 actionButton("refresh", "Refresh", style= "width:220px;padding:5px;margin:5px"),
 
                  
                  

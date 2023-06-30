@@ -153,6 +153,7 @@ H1ZDi=function (y,Nsim)
   #if (length(x) != length(cod)) {
   #  stop("x and cod must have the same length")
   #}
+  #y <- BaseRegiones[[z]]
   cod<-rep(1:length(y),lengths(y))
   fac <- factor(cod)
   x=unlist(y)
@@ -239,7 +240,7 @@ H1ZDi=function (y,Nsim)
   ZGPA=(lmrgpa(pelgpa(rLm[c(1,2,4,5)]),nmom=4)[4]-tau4Reg+B4)/std4
   ZGAU=(lmrkap(pelgau(regsamlmu(y))$para,nmom=4)[4]-tau4Reg+B4)/std4
   
-  names(ZGLO)="glo"
+    names(ZGLO)="glo"
   names(ZGEV)="gev"
   names(ZGNO)="gno"
   names(ZPE3)="pe3"
@@ -266,7 +267,8 @@ H1ZDi=function (y,Nsim)
   
   #output
   output[[1]]<- H
-  output[[2]]<-c(ZGLO,ZGEV,ZGNO,ZPE3,ZGPA,ZGAU)
+  #output[[2]]<-c(ZGLO,ZGEV,ZGNO,ZPE3,ZGPA,ZGAU)
+  output[[2]]<-c(ZGLO,99999,ZGNO,ZPE3,ZGPA,ZGAU)
   output[[3]]<-Di
   output[[4]]<-rDi
   names(output)[[1]] <- "H"
@@ -438,9 +440,9 @@ database_creation <- function(model = "CRU", country = "BWA",  maxstations=10000
     pre$y = ncvar_get(nc, "lat")
     pre$z = ncvar_get(nc, "pre", start=c(300, 90, 829), count=c(213, 183, 552))#1970 a 2015, lon=-30.25 to 75.75 lat=-45.25 to 45.75
     # Just for Africa
-    #xmin=lon[300];xmax=lon[300+213];ymin=lat[90];ymax=lat[90+183]
+    xmin=lon[300];xmax=lon[300+213];ymin=lat[90];ymax=lat[90+183]
     #New version
-    xmin=min(lon);xmax=max(lon);ymin=min(lat);ymax=max(lat)
+    #xmin=min(lon);xmax=max(lon);ymin=min(lat);ymax=max(lat)
     
     # Create rasterstack with precipitation layers ==================
     pre.layers<-raster::stack()
@@ -456,14 +458,16 @@ database_creation <- function(model = "CRU", country = "BWA",  maxstations=10000
     dummyreturn <- shape_country(country)
     Boundaries <- dummyreturn$Boundaries
     sps <- dummyreturn$sps
+    
     rm(dummyreturn)
     #BoundariesAFR=readOGR("AfricaDA.shp") #from http://www.maplibrary.org/library/stacks/Africa/index.htm
     if(clip_method == "Shape"){
       pre.monthly.AFR=mask(pre.layers,Boundaries)
-      pre.monthly.AFR=crop(pre.layers,Boundaries)
+      pre.monthly.AFR=crop(pre.monthly.AFR,Boundaries)
+      
     } else {
       pre.monthly.AFR=mask(pre.layers,polygons(sps))
-      pre.monthly.AFR=crop(pre.layers,polygons(sps))
+      pre.monthly.AFR=crop(pre.monthly.AFR,polygons(sps))
     }
 
  
@@ -500,11 +504,11 @@ database_creation <- function(model = "CRU", country = "BWA",  maxstations=10000
     plot(Boundaries)
     
     if(clip_method == "Shape"){
-      country.rts=crop(pre.monthly.AFR,polygons(Boundaries))
-      country.rts=mask(country.rts,polygons(Boundaries))
+      country.rts=mask(pre.monthly.AFR,polygons(Boundaries))
+      country.rts=crop(country.rts,polygons(Boundaries))
     } else {
-      country.rts=crop(pre.monthly.AFR,polygons(sps))
-      country.rts=mask(country.rts,polygons(sps))
+      country.rts=mask(pre.monthly.AFR,polygons(sps))
+      country.rts=crop(country.rts,polygons(sps))
     }
     
     country.rts.monthly=rts(country.rts,d)
@@ -815,7 +819,7 @@ database_creation <- function(model = "CRU", country = "BWA",  maxstations=10000
 
 
 step2_variable_calculation <- function(country = country){
-  #country="DZA"
+  #country="BWA"
   #setwd(workdir)
   setwd(paste0("./", country)) #changed slashes
   #getwd()  
@@ -1023,14 +1027,16 @@ step2_variable_calculation <- function(country = country){
   #....................................................................................
   for (est in 1:estaciones){
     
-    Y<-RegTotalS[[est]]$CumSumDec/mean(RegTotalS[[est]]$CumSumDec,na.rm=T)
-    X<-RegTotalS[[est]]$Year
+    Y<- RegTotalS[[est]]$CumSumDec/mean(RegTotalS[[est]]$CumSumDec,na.rm=T)
+    X<- RegTotalS[[est]]$Year
     XY<-cbind(X,Y)
     orderX=order(X)
     XY<-data.frame(XY[orderX,])
     z <- read.zoo(XY)
+    #solucionamos el warning por diferencia de clase
+    index(z) <- int(index(z))
     gz <- zoo( x = NULL ,seq(min(time(z)), max(time(z))))
-    XYzoo<-merge(z, gz)
+    XYzoo<-merge(gz,z)
     XYdf<-data.frame(X=index(XYzoo),Y=XYzoo,row.names=NULL)
     
     mk<-as.numeric(MannKendall(as.ts(XYzoo)))[2]# Paquete Kendall
@@ -1107,7 +1113,7 @@ step2_variable_calculation <- function(country = country){
 
 regionalization <- function (BaseDatosEstaciones, BaseRegistrosPr, VarInter="CumSumDec", Hc=2, Hf=0.95 ){
   # Minimum Distance Searching Algorithm
-  #debug BaseDatosEstaciones = output_2$BaseDatosEstaciones; BaseRegistrosPr = output_2$BaseRegistrosPr
+  #debug BaseDatosEstaciones = output_2$BaseDatosEstaciones; BaseRegistrosPr = output_2$BaseRegistrosPr;Hc=2; Hf=0.95;VarInter="CumSumDec";
   BaseCompletaAdapt=merge(BaseDatosEstaciones,BaseRegistrosPr, by.x = "id_station", by.y = "id_station") # Ac? uno la Base de Datos de Estaciones con Indices Medios y  la Base de Datos de Registros
   write.csv(BaseCompletaAdapt, "BaseCompletaAdapt.csv", row.names=FALSE)
   #rm(BaseCompletaAdapt) # Aca debo remover y volver a cargar la  Base de Datos en el sistema
@@ -1156,7 +1162,7 @@ regionalization <- function (BaseDatosEstaciones, BaseRegistrosPr, VarInter="Cum
       #SumStRegData<-as.regdata(SumSt)# Change format
       #Rlm<-regavlmom(SumStRegData)#Calculate regional L-moments
       #HW_H1orig<-regtst(SumStRegData, nsim=500)
-      HW_H1<-H1ZDi(BaseReg_adapt, Nsim=1000)#H1 calculado con nueva funci?n
+      HW_H1<-H1ZDi(BaseReg_adapt, Nsim=2000)#H1 calculado con nueva funci?n
       #H1sorig[i+1]=HW_H1orig$H[1]
       H1s[i+1]=HW_H1$H[1]
       #H1Record[i+1]=HW_H1$H[1]# INVENTAR UN H1 PARA i-1<2.5. Ir almacenando los H1s y 
@@ -1210,6 +1216,8 @@ regionalization <- function (BaseDatosEstaciones, BaseRegistrosPr, VarInter="Cum
 
 regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, BaseDatosEstacionesClust, BaseRegistrosPr, z, Hc, country ){
   # E.1. Create homogeneous regions
+  #ClustLevels <- output_3$ClustLevels ; NombreClusters <- output_3$NombreClusters; VarInter <- output_3$VarInter; BaseDatosEstacionesClust <- output_3$BaseDatosEstacionesClust ; BaseRegistrosPr <- output_2$BaseRegistrosPr; z <- output_2$z; Hc <-output_3$Hc ; country = "BWA"
+
   #Incluir linea con ifelse que evalue la dimension de NombresCluster y asigne MaxClusters
   #VarInter="CumSumDec"
   MaxClusters=ClustLevels
@@ -1238,8 +1246,8 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
     p0bias=list()
     MediaCompleta=list()
     NombreRegiones=character()
-    for(l in 1:MaxClusters[k]){
-      Region<-sqldf(paste("SELECT id_station, ", VarInter," FROM BaseDatosEstacionesClust join BaseRegistrosPr USING(id_station) where ",NombreClusters[k],"==",l,sep="")) #NombreClusters k es ClustReg_adapt
+    for(l in 1:MaxClusters){
+      Region<-sqldf(paste("SELECT id_station, ", VarInter," FROM BaseDatosEstacionesClust join BaseRegistrosPr USING(id_station) where ",NombreClusters,"==",l,sep="")) #NombreClusters k es ClustReg_adapt
       #Region<-sqldf(paste("select id_station,JanDec from BaseCompletaIII where ",NombreClusters[k],"==",l,sep=""))
       #Region_dat<-Region["JanDec"][,]
       #Region_fac<-factor(Region["id_station"][,])
@@ -1253,7 +1261,7 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
       RegsinCero=lapply(Reg, function(x) {x[x!=0]})
       BaseRegiones[[l]]=RegsinCero
       
-      NombreRegiones[l]=paste("Region ",NombreClusters[k],l,sep=".")
+      NombreRegiones[l]=paste("Region",NombreClusters[k],l,sep=".")
     }
     
     # E.2. Test missing stations
@@ -1263,7 +1271,7 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
     TotalEstaciones<-sum(N)
     
     print(paste("The total number of analyzed stations is: ",TotalEstaciones,sep=""))
-    print (paste("from ",length(levels(BaseDatosEstacionesClust$id_station))," available stations in BaseCompletaIII",sep=""))
+    print (paste("from ",length(BaseDatosEstacionesClust$id_station)," available stations in BaseCompletaIII",sep=""))
     
     # E.3. Regionalization
     Regiones<-length(BaseRegiones)
@@ -1302,8 +1310,8 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
       SummaryStatistics<-regsamlmu(BaseRegiones[[z]])# Calculate sample L-moments #EN BASEreGIONES APARECE LE PROBLEMA
       SummaryStatisticsRegData<-as.regdata(SummaryStatistics)# Change format
       Rlmoments<-regavlmom(SummaryStatisticsRegData)#Calculate regional L-moments
-      #ARF<-regtst(SummaryStatisticsRegData, nsim=1000)# Calculate region statistics
-      ARF<-H1ZDi(BaseRegiones[[z]],Nsim=1000)#Elaborada especialmente por mi basado en homtest
+      #ARF<-regtst(SummaryStatisticsRegData, nsim=2000)# Calculate region statistics
+      ARF<-H1ZDi(BaseRegiones[[z]],Nsim=5000)#Elaborada especialmente por mi basado en homtest
       a<-length(BaseRegiones[[z]])
       ResultadosSummaryStatistics[1:a,1:7,z]<-as.matrix(SummaryStatistics) #Se supone que aca almaceno todos los L-momentos
       ResultadosRlmoments[1:5,z]<-Rlmoments
@@ -1334,8 +1342,8 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
       }
       ResultadosRMAP[z]<-weighted.mean(SummaryStatisticsRegData[[3]],SummaryStatisticsRegData[[2]]) # Se calcula la precipitaci?n media cada Regi?n
       TablaResumen_Regiones[z,1:5]<-c(round(ARF$H[1],digits=1),DistOpt,min(abs(ARF$Z)),length(which(ARF$D>3)),length(ARF$D))
-      TablaResumen_Regiones[["Cluster"]]=NombreClusters[k]#Acá se debiese agregar la l, ya que define cada cluster. NO SE AGREGA LA L
-      #TablaResumen_Regiones[["Cluster"]][z]=paste0(NombreClusters[k],"_",z)#Adaptación CAZALAC. ESTE ARCHIVO NO CUENT ACON ESTA ADAPTACIÓN
+      #TablaResumen_Regiones[["Cluster"]]=NombreClusters[k]#Acá se debiese agregar la l, ya que define cada cluster. NO SE AGREGA LA L
+      TablaResumen_Regiones[["Cluster"]][z]=paste0(NombreClusters[k],"_",z)#Adaptación CAZALAC. ESTE ARCHIVO NO CUENT ACON ESTA ADAPTACIÓN
       lmrd(SummaryStatisticsRegData,xlim=c(-0.3,0.6),pch="*",legend.lmrd=list(cex=0.5),main=paste("Region ",NombreRegiones[z],sep=""),cex.main=0.8)
       lmrdpoints(Rlmoments, type="p", pch=19, cex=1.2, col="red" )
       #rgc <- regqfunc(rfit2)# Calcular Curva Crecimiento Regional
@@ -1402,7 +1410,6 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
   
   colnames(ResumeTable)=c("Cluster","RE","Total.Sites","SitesperRegion","AE")
   ColNom <- data.frame(Trial=1:length(NombreClusters), Cluster=NombreClusters)
-  ResumeTable <- ResumeTable
   #ResumeTable <- merge(ColNom,ResumeTable,by="Cluster") #sacado cazalac
   #ResumeTable <- ResumeTable[order(ResumeTable$Trial),] #sacado cazalac
   View(ResumeTable)
@@ -1416,10 +1423,9 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
 }
 
 
-
 period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, BaseBaseRegiones, ResumeTable, BaseMediaCompleta, BaseProporCeros, Basep0bias, Baserfitdist, Baserfitpara){
   
-  #debug BaseSummaryStatistics = output6$BaseSummaryStatistics; BaseDatosEstacionesClust = output6$BaseDatosEstacionesClust; BaseBaseRegiones = output6$BaseBaseRegiones; ResumeTable = output6$ResumeTable
+  #debug BaseSummaryStatistics = output5$BaseSummaryStatistics; BaseDatosEstacionesClust <- output5$BaseDatosEstacionesClust; BaseProporCeros <- output5$BaseProporCeros; BaseMediaCompleta <- output5$BaseMediaCompleta; BaseBaseRegiones = output5$BaseBaseRegiones; ResumeTable = output5$ResumeTable; Basep0bias <- output5$Basep0bias; Baserfitdist <- output5$Baserfitdist; Baserfitpara <- output5$Baserfitpara;
   # These are the L-moments of the Variable of Interest (not necessarily annual precipitation)
   #These are the L-moments of the non zero records
   lmom.df=data.frame(BaseSummaryStatistics[[1]][,,1])
@@ -1452,7 +1458,7 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
   nameProbInteres=c("1_in_100yr","1_in_90yr","1_in_80yr","1_in_70yr","1_in_60yr","1_in_50yr","1_in_40yr","1_in_30yr",
                     "1_in_20yr","1_in_10yr","1_in_5yr","1_in_2yr")
   
-  SClst=which.max(ResumeTable$AE)
+  SClst=base::which.max(ResumeTable$AE)
   
   #......... Frequency Estimation
   FRECUENCIAS<-list()
@@ -1488,6 +1494,7 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
       FrequencyEstimation$Px=ifelse(CuantilInteres[j]>0,
                                     FrequencyEstimation$propCero+(1-FrequencyEstimation$propCero)*FrequencyEstimation$EstFreq,
                                     FrequencyEstimation$biasCero)
+      
       FrequencyEstimation$PR=ifelse (FrequencyEstimation$Px>0.5,
                                      1/(1-FrequencyEstimation$Px),
                                      1/FrequencyEstimation$Px)
@@ -1595,8 +1602,8 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
   
   # At this stage, the Final DataBase "BaseModelMapCor", with al necessary variables for mapping is already available
   #The user can produce preliminary maps with conventional interpolation methods
-  output5 <- list("BaseModelMapCor" = BaseModelMapCor)
-  return(output5)
+  output <- list("BaseModelMapCor" = BaseModelMapCor)
+  return(output)
   #....................................................END F BLOCK VI...........................................
 }
 
@@ -1604,7 +1611,7 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
 
 
 period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
-  #debug ResumeTable = output5$ResumeTable; BaseModelMapCor = output6$BaseModelMapCor; Boundaries = output_2$Boundaries
+  #debug ResumeTable = output5$ResumeTable; BaseModelMapCor = output6$BaseModelMapCor; Boundaries = output_2$Boundaries;country;
   # Prepare Thiessen polygons mask shapefile and plotting
   # Calculo Periodo de Retorno m?ximo posible de calcular 5t- rule Jakob et al, 1999
   #RecLength=quantile(BaseModelMapCorII$RL_Station,0.5)
@@ -1776,7 +1783,7 @@ if(st_bbox(pol1)$ymax < 0){
   #Rasterbrick creation with the maps of all predictors
   raster_list<-Predictor   
   rast.list<-list()
-  temp.r.l=raster(paste0(carpetaADAFolderPredictors,raster_list[1],".img"))
+  temp.r.l=raster(paste0(carpetaADAFolderPredictors,raster_list[1],".tif"))
   temp.r.l=crop(temp.r.l,polygons(Boundaries))
   temp.r.l<-mask(temp.r.l,polygons(Boundaries))
   plot(temp.r.l,main="P1")
@@ -1784,7 +1791,7 @@ if(st_bbox(pol1)$ymax < 0){
   Prtrs[,1]=extract(temp.r.l, coords, method='bilinear')
   
   for(l in 2:length(raster_list)){
-    country.raster<-raster(paste0(carpetaADAFolderPredictors,raster_list[l],".img"))
+    country.raster<-raster(paste0(carpetaADAFolderPredictors,raster_list[l],".tif"))
     country.raster<-crop(country.raster,polygons(Boundaries))
     country.raster<-mask(country.raster,polygons(Boundaries))
     if(compareRaster(country.raster,temp.r.l)==TRUE){
@@ -1796,7 +1803,7 @@ if(st_bbox(pol1)$ymax < 0){
     rast.list[[l]] <-country.raster
     plot(country.raster,main=paste0("P",l))
     pb$tick()
-    Sys.sleep(1 / 21)
+    #Sys.sleep(1 / 21)
   }
   
   print(paste0(length(Predictor), " layers used from ",22," layers available"))
