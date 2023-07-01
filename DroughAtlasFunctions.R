@@ -268,7 +268,7 @@ H1ZDi=function (y,Nsim)
   #output
   output[[1]]<- H
   #output[[2]]<-c(ZGLO,ZGEV,ZGNO,ZPE3,ZGPA,ZGAU)
-  output[[2]]<-c(ZGLO,99999,ZGNO,ZPE3,ZGPA,ZGAU)
+  output[[2]]<-c(ZGLO,ZGEV,ZGNO,ZPE3,ZGPA,ZGAU)
   output[[3]]<-Di
   output[[4]]<-rDi
   names(output)[[1]] <- "H"
@@ -1246,8 +1246,8 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
     p0bias=list()
     MediaCompleta=list()
     NombreRegiones=character()
-    for(l in 1:MaxClusters){
-      Region<-sqldf(paste("SELECT id_station, ", VarInter," FROM BaseDatosEstacionesClust join BaseRegistrosPr USING(id_station) where ",NombreClusters,"==",l,sep="")) #NombreClusters k es ClustReg_adapt
+    for(l in 1:MaxClusters[k]){
+      Region<-sqldf(paste("SELECT id_station, ", VarInter," FROM BaseDatosEstacionesClust join BaseRegistrosPr USING(id_station) where ",NombreClusters[k],"==",l,sep="")) #NombreClusters k es ClustReg_adapt
       #Region<-sqldf(paste("select id_station,JanDec from BaseCompletaIII where ",NombreClusters[k],"==",l,sep=""))
       #Region_dat<-Region["JanDec"][,]
       #Region_fac<-factor(Region["id_station"][,])
@@ -1342,8 +1342,8 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
       }
       ResultadosRMAP[z]<-weighted.mean(SummaryStatisticsRegData[[3]],SummaryStatisticsRegData[[2]]) # Se calcula la precipitaci?n media cada Regi?n
       TablaResumen_Regiones[z,1:5]<-c(round(ARF$H[1],digits=1),DistOpt,min(abs(ARF$Z)),length(which(ARF$D>3)),length(ARF$D))
-      #TablaResumen_Regiones[["Cluster"]]=NombreClusters[k]#Acá se debiese agregar la l, ya que define cada cluster. NO SE AGREGA LA L
-      TablaResumen_Regiones[["Cluster"]][z]=paste0(NombreClusters[k],"_",z)#Adaptación CAZALAC. ESTE ARCHIVO NO CUENT ACON ESTA ADAPTACIÓN
+      TablaResumen_Regiones[["Cluster"]]=NombreClusters[k]#Acá se debiese agregar la l, ya que define cada cluster. NO SE AGREGA LA L
+      #TablaResumen_Regiones[["Cluster"]][z]=paste0(NombreClusters[k],"_",z)#Adaptación CAZALAC. ESTE ARCHIVO NO CUENT ACON ESTA ADAPTACIÓN
       lmrd(SummaryStatisticsRegData,xlim=c(-0.3,0.6),pch="*",legend.lmrd=list(cex=0.5),main=paste("Region ",NombreRegiones[z],sep=""),cex.main=0.8)
       lmrdpoints(Rlmoments, type="p", pch=19, cex=1.2, col="red" )
       #rgc <- regqfunc(rfit2)# Calcular Curva Crecimiento Regional
@@ -1410,8 +1410,8 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
   
   colnames(ResumeTable)=c("Cluster","RE","Total.Sites","SitesperRegion","AE")
   ColNom <- data.frame(Trial=1:length(NombreClusters), Cluster=NombreClusters)
-  #ResumeTable <- merge(ColNom,ResumeTable,by="Cluster") #sacado cazalac
-  #ResumeTable <- ResumeTable[order(ResumeTable$Trial),] #sacado cazalac
+ # ResumeTable <- merge(ColNom,ResumeTable,by="Cluster") #sacado cazalac
+#  ResumeTable <- ResumeTable[order(ResumeTable$Trial),] #sacado cazalac
   View(ResumeTable)
   write.csv(ResumeTable,"ResumeTable.csv",row.names=FALSE)
   #BaseSummaryStatistics

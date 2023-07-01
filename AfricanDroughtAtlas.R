@@ -28,7 +28,7 @@ library(sf);library(circular);library(reshape);library(deldir)
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="BWA"
+country="TUN"
 
 
 #  Optinal Config =======================
