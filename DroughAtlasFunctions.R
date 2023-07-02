@@ -1216,7 +1216,7 @@ regionalization <- function (BaseDatosEstaciones, BaseRegistrosPr, VarInter="Cum
 
 regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, BaseDatosEstacionesClust, BaseRegistrosPr, z, Hc, country ){
   # E.1. Create homogeneous regions
-  #ClustLevels <- output_3$ClustLevels ; NombreClusters <- output_3$NombreClusters; VarInter <- output_3$VarInter; BaseDatosEstacionesClust <- output_3$BaseDatosEstacionesClust ; BaseRegistrosPr <- output_2$BaseRegistrosPr; z <- output_2$z; Hc <-output_3$Hc ; country = "BWA"
+  #ClustLevels <- output_3$ClustLevels ; NombreClusters <- output_3$NombreClusters; VarInter <- output_3$VarInter; BaseDatosEstacionesClust <- output_3$BaseDatosEstacionesClust ; BaseRegistrosPr <- output_2$BaseRegistrosPr; z <- output_2$z; Hc <-output_3$Hc ; country = "TUN"
 
   #Incluir linea con ifelse que evalue la dimension de NombresCluster y asigne MaxClusters
   #VarInter="CumSumDec"
@@ -1410,8 +1410,8 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
   
   colnames(ResumeTable)=c("Cluster","RE","Total.Sites","SitesperRegion","AE")
   ColNom <- data.frame(Trial=1:length(NombreClusters), Cluster=NombreClusters)
- # ResumeTable <- merge(ColNom,ResumeTable,by="Cluster") #sacado cazalac
-#  ResumeTable <- ResumeTable[order(ResumeTable$Trial),] #sacado cazalac
+  ResumeTable <- merge(ColNom,ResumeTable,by="Cluster") #sacado cazalac
+  ResumeTable <- ResumeTable[order(ResumeTable$Trial),] #sacado cazalac
   View(ResumeTable)
   write.csv(ResumeTable,"ResumeTable.csv",row.names=FALSE)
   #BaseSummaryStatistics
