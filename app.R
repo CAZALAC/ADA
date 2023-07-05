@@ -84,7 +84,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
                sidebarPanel(
               #   selectInput("clipping", "Clipping Method", c("Rectangle","Shape")),
               #   p("The Shape option only occupies stations that are within the area of interest. The rectangle option uses the extend to generate a rectangle with 5% margin."),
-                 numericInput("maxstations", "Max. Stations:", 10000, min = 1, max = 10000000),
+                 numericInput("maxstations", "Max. Stations:", 1000, min = 1, max = 10000000),
                  p("Max number of virtual stations to generate."),
                  
                  
@@ -161,7 +161,7 @@ server <- function(input, output) {
       try(map <- spTransform(map, "+proj=longlat +datum=WGS84"), silent = TRUE)
       
       if(input$ddata == "CRU"){
-        
+        #virtualstations <- raster::shapefile("./Shape/CHIRPS_25.shp")
         virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
         clipped_virtualstations <- raster::intersect(map,virtualstations)
         #we get the numbers of stations
@@ -170,7 +170,8 @@ server <- function(input, output) {
       }
       if(input$ddata == "CHIRPS" & inputshinnyresol(input$resol)=="25"){
         
-        virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
+        virtualstations <- raster::shapefile("./Shape/chirps_25_lite_2.shp")
+      
         clipped_virtualstations <- raster::intersect(map,virtualstations)
         #we get the numbers of stations
         n_stations$n <- length(clipped_virtualstations@data[,1])
@@ -187,7 +188,7 @@ server <- function(input, output) {
                     opacity = 0.5, fillOpacity = 0,
                     highlightOptions = highlightOptions(color = "white", weight = 2,
                                                         bringToFront = TRUE), group = "Boundaries")  %>%
-        addCircles(data = clipped_virtualstations, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
+        addCircles(data = clipped_virtualstations, lng = ~x, lat = ~y, weight = 3,popup = 1, opacity = 0.5, group = "Step 1") %>% 
         
          addLayersControl(
     overlayGroups = c("Boundaries"),
@@ -212,14 +213,21 @@ server <- function(input, output) {
       
       }
       if(input$ddata == "CHIRPS" & inputshinnyresol(input$resol)=="25"){
-        
-        virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
-        clipped_virtualstations <- raster::intersect(states,virtualstations)
+        countryiso = countrycode(input$icountry_list, origin = 'country.name', destination = 'iso3c')
+        path=paste("./Shape/",countryiso,"_chirps_25.shp",sep="")
+        if(file.exists(path)){
+          clipped_virtualstations <- raster::shapefile(path)
+        }else{
+          virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
+          clipped_virtualstations <- raster::intersect(states,virtualstations)
+          
+          }
+
         #we get the numbers of stations
         n_stations$n <- length(clipped_virtualstations@data[,1])
       }
       if(input$ddata == "CHIRPS" & inputshinnyresol(input$resol) =="05"){
-        virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
+
         clipped_virtualstations <- raster::intersect(states,virtualstations)
         #we get the numbers of stations
         n_stations$n <- length(clipped_virtualstations@data[,1])
@@ -232,7 +240,7 @@ server <- function(input, output) {
                     opacity = 0.5, fillOpacity = 0,
                     highlightOptions = highlightOptions(color = "white", weight = 2,
                                                         bringToFront = TRUE), group = "Boundaries") %>%
-                    addCircles(data = clipped_virtualstations, lng = ~x, lat = ~y, weight = 3,popup = ~cell, opacity = 0.5, group = "Step 1") %>% 
+                    addCircles(data = clipped_virtualstations, lng = clipped_virtualstations@coords[,1], lat = clipped_virtualstations@coords[,2], weight = 3,popup = 1, opacity = 0.5, group = "Step 1") %>% 
         
         addLayersControl(
           overlayGroups = c("Boundaries"),

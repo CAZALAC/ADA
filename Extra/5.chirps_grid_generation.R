@@ -1,8 +1,8 @@
 workdir <- here()
 setwd(workdir)
 print(workdir)
-country = "DEMODATA2"
-http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/.daily-improved/.global/.0p05/.prcp/T/%28Jan%201981%29/%28Dec%202016%29/RANGE/weeklytomonthly/T/253.5/VALUE/Y/-49.975/49.975/RANGEEDGES/data.nc
+country = "demodata"
+#http://iridl.ldeo.columbia.edu/SOURCES/.UCSB/.CHIRPS/.v2p0/.daily-improved/.global/.0p25/.prcp/T/%28Jan%201981%29/%28Dec%201981%29/RANGE/weeklytomonthly/T/253.5/VALUE/Y/-49.975/49.975/RANGEEDGES/data.nc
 #Create working directory and set working directory
 dir.create(paste0("./",country,sep=""))
 setwd(paste0("./",country,sep=""))
@@ -12,7 +12,7 @@ setwd(paste0("./",country,sep=""))
 #After download, put the file into the country's folder.
 # Download netCDF file
 
-dfile=c("data.nc")      
+dfile=c("data5.nc")      
 print(url)
 #Additional time for slow connections and if DL takes time to process
 
@@ -24,7 +24,7 @@ lat <- ncvar_get(datos_ncdf, "Y")
 
 #Extraer tiempo (esto puede ser confuso, pero como tenemos las fechas, no habr?a problema en modificarlo) (1 jan 1981) - (31 Dic 2016)
 tpo <- ncvar_get(datos_ncdf, "T")
-tpo2 <- seq(from = as.Date("1981-01-01"), to = as.Date("2016-12-31"), by = "month")
+tpo2 <- seq(from = as.Date("1981-01-01"), to = as.Date("1981-12-31"), by = "month")
 
 #get the name of the variable
 var_name_ndf = names(datos_ncdf$var)[1]
@@ -59,10 +59,19 @@ est_cuadro <- data.frame(lonlat)
 est_cuadro$ID <- paste("id_", 1:nrow(est_cuadro), sep = "")
 #est_cuadro <- SpatialPointsDataFrame(coords = lonlatDF[,1:2], proj4string = proj4string(mapa), bbox = lonlatDF)
 coordinates(est_cuadro) <- ~ Var1 + Var2
+shapeafrica <- shapefile("../Shape/AfricaDA.shp")
+salida <- raster::intersect(est_cuadro,shapeafrica)
 
+shapefile(salida, "chirps_25.shp")
+
+shapefile(est_cuadro, "sahpe3.shp")
 #Se edita el archivo lonlat para seleccionar aquellos puntos que est?n dentro del l?mite pa?s
 est_selec <- est_cuadro #perfecto, se guarda
 plot(est_selec)
+
+
+
+
 
 
 
@@ -71,7 +80,7 @@ plot(est_selec)
 est_selecDF <- data.frame(est_selec)
 
 #Se crea un data frame que almacenar? en cada lista, los valores por d?a
-tpo2 <- seq(from = as.Date("1981-01-01"), to = as.Date("2016-12-31"), by = "month")
+tpo2 <- seq(from = as.Date("1981-01-01"), to = as.Date("1981-12-31"), by = "month")
 
 DF_est <- data.frame(date = tpo2, prcp_chirps = NA)
 
@@ -80,13 +89,28 @@ lista_est <- list()
 
 for (i in 1:nrow(est_selecDF)){ #Continuar desde ac?...
   
-  #print(paste0("station ",i," of ",nrow(est_selecDF)))
+  print(paste0("station ",i," of ",nrow(est_selecDF)))
   
   lista_est[[i]] <- DF_est
   names(lista_est)[i] <- as.character(est_selecDF[i,3])
   
 }
+res <- vector('list', nrow(est_selecDF))
+for(i in 1:nrow(est_selecDF)){
 
+    res[[i]]  <- as.character(est_selecDF[i,3])
+
+}
+
+lapply(res, FUN = )
+
+lista_est[[i]] <- DF_est
+resfd <- function(lista_est){
+  lista_est <- DF_est
+  }
+lista_est2 <- lapply(res,resfd)
+names(lista_est2) <- as.character(est_selecDF[,3])
+lista_est <- lista_est2
 #........................................
 # Extraer valores desde el prcpc_array usando "est_selecDF"
 # almacenar en la lista
