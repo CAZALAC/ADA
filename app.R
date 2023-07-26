@@ -114,8 +114,11 @@ server <- function(input, output) {
   output$stations <- renderText({
     
     if(!is_empty(n_stations$n)){
+      if(n_stations$n == "notav"){
+      return("Display not available, showing CRU stations") 
+      }else{
       return(paste("Number of Stations:",n_stations$n, " detected!")) 
-    }
+    }}
     
     
   })
@@ -180,7 +183,8 @@ server <- function(input, output) {
         virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
         clipped_virtualstations <- raster::intersect(map,virtualstations)
         #we get the numbers of stations
-        n_stations$n <- length(clipped_virtualstations@data[,1])
+        #no disponible
+        n_stations$n <- "notav"
       }
       
       leaflet() %>%addTiles() %>%
@@ -227,10 +231,10 @@ server <- function(input, output) {
         n_stations$n <- length(clipped_virtualstations@data[,1])
       }
       if(input$ddata == "CHIRPS" & inputshinnyresol(input$resol) =="05"){
-
+        virtualstations <- raster::shapefile("./Shape/CRU_dots.shp")
         clipped_virtualstations <- raster::intersect(states,virtualstations)
         #we get the numbers of stations
-        n_stations$n <- length(clipped_virtualstations@data[,1])
+        n_stations$n <- "notav"
       }
       
       
@@ -571,8 +575,9 @@ server <- function(input, output) {
     r07 <- raster('Mapas/RP07.tif')
     r08 <- raster('Mapas/RP08.tif')
     r09 <- raster('Mapas/RP09.tif')
-    
-    
+    calc <- raster::stack(r,r05,r06,r07,r08,r09)
+    quantile(calc , probs = c(seq(0.1,1,.1)), type=7,names = FALSE)
+
     #rp legend colors
     minrp <- min(c(r@data@min,r05@data@min,r06@data@min,r07@data@min,r08@data@min,r09@data@min))
     maxrp <- max(c(r@data@max,r05@data@max,r06@data@max,r07@data@max,r08@data@max,r09@data@max))

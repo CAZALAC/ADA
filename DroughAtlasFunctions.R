@@ -420,7 +420,7 @@ randomSample = function(df,n) {
 database_creation <- function(model = "CRU", country = "BWA",  maxstations=10000, resol="25") {
   clip_method="Shape"
   # BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
-  # debug: model = "CHIRPS"; country = "BEN"; clip_method="Rectangle"
+  # debug: model = "CRU"; country = "BWA"; clip_method="Rectangle"
   if(model=="CRU"){
     # Optional Config Setup, Country Code, Shape and raster creation =================
     workdir <- here()
@@ -1311,7 +1311,7 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
       SummaryStatisticsRegData<-as.regdata(SummaryStatistics)# Change format
       Rlmoments<-regavlmom(SummaryStatisticsRegData)#Calculate regional L-moments
       #ARF<-regtst(SummaryStatisticsRegData, nsim=2000)# Calculate region statistics
-      ARF<-H1ZDi(BaseRegiones[[z]],Nsim=5000)#Elaborada especialmente por mi basado en homtest
+      ARF<-H1ZDi(BaseRegiones[[z]],Nsim=2000)#Elaborada especialmente por mi basado en homtest
       a<-length(BaseRegiones[[z]])
       ResultadosSummaryStatistics[1:a,1:7,z]<-as.matrix(SummaryStatistics) #Se supone que aca almaceno todos los L-momentos
       ResultadosRlmoments[1:5,z]<-Rlmoments
@@ -1329,12 +1329,14 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
       if (DistOpt=="gau"){
         rfit<-pelgau(SummaryStatistics)
         RegionalQuantiles<-quakap(seq(0.05, 0.95, by=0.05), rfit$para)#Quantile calculation
+
         names(RegionalQuantiles)=seq(0.05, 0.95, by=0.05)
         Resultadosrfitdist[z]<-rfit$dist # Se identifica la distribucion utilizada
         Resultadosrfitpara[1:3,z]<-rfit$para[1:3]
         ResultadosRegionalQuantiles[1:19,z]<-RegionalQuantiles # Para cada regi?n "z", almaceno sus resultados
       } else {
         rfit<-regfit(SummaryStatisticsRegData, DistOpt) # Aca se selecciona autom?ticamente la distribuci?n con menor Z
+        
         RegionalQuantiles<-regquant(seq(0.05, 0.95, by=0.05), rfit)#Quantile calculation
         Resultadosrfitdist[z]<-rfit$dist # Se identifica la distribucion utilizada
         Resultadosrfitpara[1:3,z]<-rfit$para # Se presentan los parametros de la distribuci?n ajustada
@@ -1430,11 +1432,11 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
   #These are the L-moments of the non zero records
   lmom.df=data.frame(BaseSummaryStatistics[[1]][,,1])
   #fix debido a que si es igual a 1 BaseSummaryStatistics queda fuera de rango
-  if(dim(BaseSummaryStatistics[[1]])[3] > 1){
+  #if(dim(BaseSummaryStatistics[[1]])[3] > 1){
     for (a in 2:dim(BaseSummaryStatistics[[1]])[3]){
       lmom.df=rbind(lmom.df,data.frame(BaseSummaryStatistics[[1]][,,a]))
     }
-  }
+  #}
   colnames(lmom.df)=c("id_station","n","mean","L_CV","L_Skewness","L_Kurtosis","t_5")
   lmom.df$id_station=as.factor(lmom.df$id_station)
   lmom.df$n=as.numeric(as.character(lmom.df$n))
@@ -1453,7 +1455,7 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
   #.................................................................................................................
   
   # Frecuency and quantile values of interest
-  CuantilInteres<-c(0.5,0.6, 0.7,0.8,0.9,1)
+  CuantilInteres<-c( 0.5, 0.6, 0.7, 0.8, 0.9, 1)
   ProbInteres=c(1/100,1/90,1/80,1/70,1/60,1/50,1/40,1/30,1/20,1/10,1/5,1/2)
   nameProbInteres=c("1_in_100yr","1_in_90yr","1_in_80yr","1_in_70yr","1_in_60yr","1_in_50yr","1_in_40yr","1_in_30yr",
                     "1_in_20yr","1_in_10yr","1_in_5yr","1_in_2yr")
@@ -1466,6 +1468,8 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
     FQEFrequencias<-list()
     
     for (zz in 1:length(BaseBaseRegiones[[SClst]])){
+      
+      
       FrequencyEstimation<-data.frame(id_station=BaseSummaryStatistics[[SClst]][1:length(BaseBaseRegiones[[SClst]][[zz]]),1,zz],
                                       MediaSinCero=BaseSummaryStatistics[[SClst]][1:length(BaseBaseRegiones[[SClst]][[zz]]),3,zz],
                                       MediaConCero=unlist(BaseMediaCompleta[[SClst]][[zz]]))
@@ -1484,6 +1488,13 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
       #FrequencyEstimation$desvioSinCero<-(FrequencyEstimation$qSinCero-1)*100
       #FrequencyEstimation$desvioConCero<-(FrequencyEstimation$qConCero-1)*100
       switch(Baserfitdist[[SClst]][zz],
+         #    "glo"= FrequencyEstimation$EstFreq<-quaglo(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]), #*** Valores de f van el el nombre, donde f es la probabilidad de interes
+        #     "gev"= FrequencyEstimation$EstFreq<-quagev(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),#***
+        #     "gpa"= FrequencyEstimation$EstFreq<-quagpa(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),#***
+        #     "gno"= FrequencyEstimation$EstFreq<-quagno(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),#***
+        #     "pe3"= FrequencyEstimation$EstFreq<-quape3(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),
+        #     "gau"= FrequencyEstimation$EstFreq<-quakap(CuantilInteres[j], para = c(Baserfitpara[[SClst]][1:3,zz],0.5)))  #***
+      
              "glo"= FrequencyEstimation$EstFreq<-cdfglo(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]), #**** Valores de X van en el nombre, donde X es el Cuantil de Interes
              "gev"= FrequencyEstimation$EstFreq<-cdfgev(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]), #****
              "gpa"= FrequencyEstimation$EstFreq<-cdfgpa(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),  #***
@@ -1491,13 +1502,22 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
              "pe3"= FrequencyEstimation$EstFreq<-cdfpe3(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),
              "gau"= FrequencyEstimation$EstFreq<-cdfkap(CuantilInteres[j], para = c(Baserfitpara[[SClst]][1:3,zz],0.5)))  #***
       #CORREGIR EN TOOOOODOS LOS SCRIPT EXISTENTES
+      
+      #proporcion de cero, publicacion
       FrequencyEstimation$Px=ifelse(CuantilInteres[j]>0,
                                     FrequencyEstimation$propCero+(1-FrequencyEstimation$propCero)*FrequencyEstimation$EstFreq,
                                     FrequencyEstimation$biasCero)
-      
+      #borrar
+      #FrequencyEstimation$Px <- FrequencyEstimation$EstFreq
+            
       FrequencyEstimation$PR=ifelse (FrequencyEstimation$Px>0.5,
                                      1/(1-FrequencyEstimation$Px),
                                      1/FrequencyEstimation$Px)
+      #borrar
+      #FrequencyEstimation$PR=ifelse (FrequencyEstimation$Px>1,
+       #                              1/(FrequencyEstimation$Px-1),
+      #                               1/(1-FrequencyEstimation$Px) )     
+      
       #FrequencyEstimation$IPR=ifelse (FrequencyEstimation$qConCero>=1,
       #                               1/(1-FrequencyEstimation$Px),
       #                               -1/FrequencyEstimation$Px)
@@ -1540,11 +1560,11 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
              "gpa"= QuantilEstimation$EstQuant<-quagpa(ProbInteres[l], para = Baserfitpara[[SClst]][1:3,yy]),#***
              "gno"= QuantilEstimation$EstQuant<-quagno(ProbInteres[l], para = Baserfitpara[[SClst]][1:3,yy]),#***
              "pe3"= QuantilEstimation$EstQuant<-quape3(ProbInteres[l], para = Baserfitpara[[SClst]][1:3,yy]),
-             "gau"= QuantilEstimation$EstQuant<-quakap(ProbInteres[l], para = c(Baserfitpara[[SClst]][1:3,zz],0.5)))  #***
+             "gau"= QuantilEstimation$EstQuant<-quakap(ProbInteres[l], para = c(Baserfitpara[[SClst]][1:3,yy],0.5)))  #***
       
       
-      QuantilEstimation$EstQuant<-QuantilEstimation$Media*QuantilEstimation$EstQuant #***
-      QuantilEstimation$Balance<-(QuantilEstimation$EstQuant-QuantilEstimation$Media)/QuantilEstimation$Media*100
+      QuantilEstimation$EstQuant <- QuantilEstimation$Media*QuantilEstimation$EstQuant #***
+      QuantilEstimation$Balance <-(QuantilEstimation$EstQuant-QuantilEstimation$Media)/QuantilEstimation$Media*100
       names(QuantilEstimation)[4]<-paste0("EstQuant_",nameProbInteres[l])
       names(QuantilEstimation)[5]<-paste0("Balance_",nameProbInteres[l])
       FQECuantiles[[yy]]<-QuantilEstimation
