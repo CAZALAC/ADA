@@ -28,7 +28,7 @@ Create a new project in RStudio.
 In the RStudio console, execute the following command to restore the required packages:
 
 ```r
-renv::restore()
+renv::install()
 ```
 
 Open app.R and Run the application using the `Run App` function.
