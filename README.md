@@ -19,11 +19,11 @@ Create a new project in RStudio.
 
 In the RStudio console, execute the following command to restore the required packages:
 
-```bash
+```r
 renv::restore()
 ```
 
-Open app.R and Run the application using the Run App function.
+Open app.R and Run the application using the `Run App` function.
 
 ## Option B 
 
@@ -32,9 +32,11 @@ If you prefer to use Docker:
 1. Ensure that Docker is installed on your system.
 
 2. Execute the following command to set up the environment using Docker Compose:
+
 ```bash
 docker-compose up
 ```
+
 These are the two available options to configure and run the ADA project. Choose the one that suits your needs best and enjoy working on the project!
 
 If you have any further questions or need more assistance, please don't hesitate to ask!
