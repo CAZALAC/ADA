@@ -13,6 +13,14 @@ First, clone the repository to your local machine using the following Git comman
 ```bash
 git clone https://github.com/CAZALAC/ADA.git
 ```
+## Download the Folder "ADAFolderPredictors"
+
+Download the provided folder using the following link:
+
+https://drive.google.com/drive/folders/1138qEcC7yOGRirtGFBT4WctSN1ef1mg9?usp=drive_link
+
+Drag and drop the downloaded folder into the root script directory, or manually copy and paste it.
+
 
 ## Option A (Recommended)
 Create a new project in RStudio.
