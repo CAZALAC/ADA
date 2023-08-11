@@ -1488,13 +1488,14 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
       #FrequencyEstimation$desvioSinCero<-(FrequencyEstimation$qSinCero-1)*100
       #FrequencyEstimation$desvioConCero<-(FrequencyEstimation$qConCero-1)*100
       switch(Baserfitdist[[SClst]][zz],
-         #    "glo"= FrequencyEstimation$EstFreq<-quaglo(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]), #*** Valores de f van el el nombre, donde f es la probabilidad de interes
-        #     "gev"= FrequencyEstimation$EstFreq<-quagev(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),#***
-        #     "gpa"= FrequencyEstimation$EstFreq<-quagpa(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),#***
-        #     "gno"= FrequencyEstimation$EstFreq<-quagno(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),#***
-        #     "pe3"= FrequencyEstimation$EstFreq<-quape3(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),
-        #     "gau"= FrequencyEstimation$EstFreq<-quakap(CuantilInteres[j], para = c(Baserfitpara[[SClst]][1:3,zz],0.5)))  #***
+             #"glo"= FrequencyEstimation$EstFreq<-quaglo(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]), #*** Valores de f van el el nombre, donde f es la probabilidad de interes
+             #"gev"= FrequencyEstimation$EstFreq<-quagev(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),#***
+             #"gpa"= FrequencyEstimation$EstFreq<-quagpa(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),#***
+             #"gno"= FrequencyEstimation$EstFreq<-quagno(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),#***
+             #"pe3"= FrequencyEstimation$EstFreq<-quape3(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),
+             #"gau"= FrequencyEstimation$EstFreq<-quakap(CuantilInteres[j], para = c(Baserfitpara[[SClst]][1:3,zz],0.5)))  #***
       
+        #original
              "glo"= FrequencyEstimation$EstFreq<-cdfglo(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]), #**** Valores de X van en el nombre, donde X es el Cuantil de Interes
              "gev"= FrequencyEstimation$EstFreq<-cdfgev(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]), #****
              "gpa"= FrequencyEstimation$EstFreq<-cdfgpa(CuantilInteres[j], para = Baserfitpara[[SClst]][1:3,zz]),  #***
@@ -1509,14 +1510,16 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
                                     FrequencyEstimation$biasCero)
       #borrar
       #FrequencyEstimation$Px <- FrequencyEstimation$EstFreq
-            
+      
+      #original
       FrequencyEstimation$PR=ifelse (FrequencyEstimation$Px>0.5,
                                      1/(1-FrequencyEstimation$Px),
                                      1/FrequencyEstimation$Px)
-      #borrar
+      
+      #pablo
       #FrequencyEstimation$PR=ifelse (FrequencyEstimation$Px>1,
-       #                              1/(FrequencyEstimation$Px-1),
-      #                               1/(1-FrequencyEstimation$Px) )     
+       #                             1/(FrequencyEstimation$Px-1),
+        #                             1/(1-FrequencyEstimation$Px) )     
       
       #FrequencyEstimation$IPR=ifelse (FrequencyEstimation$qConCero>=1,
       #                               1/(1-FrequencyEstimation$Px),

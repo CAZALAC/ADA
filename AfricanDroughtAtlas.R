@@ -15,7 +15,7 @@
 ##################################################
 
 # Libraries ----------------------
-library(raster);library(rgdal);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
+library(raster);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
 library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(corrplot);library(sqldf)
 library(zoo);library(Kendall);library(zyp);library(car);library(gtools);
 library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
@@ -28,7 +28,7 @@ library(sf);library(circular);library(reshape);library(deldir)
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="TUN"
+country="BWA"
 
 
 #  Optinal Config =======================
@@ -59,7 +59,7 @@ output_2 <- step2_variable_calculation(country = country)
 output_3 <- regionalization(output_2$BaseDatosEstaciones,output_2$BaseRegistrosPr)
 
 # IV: EXPLORATORY DATA ANALYSIS (OPTIONAL) #                                     #
-
+  
 exploratory(BaseDatosEstacionesClust = output_3$BaseDatosEstacionesClust, country = country, VarInter="CumSumDec")
 
 # V. L-MOMENTS BASED REGIONAL FREQUENCY ANALYSIS ------------------------------
