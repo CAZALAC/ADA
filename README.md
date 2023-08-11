@@ -4,3 +4,23 @@ This repository contains the code and resources for the African Drought Atlas (A
 
 ## Contributing
 We welcome contributions from researchers, meteorologists, hydrologists, and anyone interested in advancing our understanding of hydro-climatic extreme events in Africa. If you have valuable data, insights, or improvements to the methodology, we encourage you to contribute to this repository.
+
+# Instructions to Set Up the ADA Project
+
+## Clone the Repository
+First, clone the repository to your local machine using the following Git command:
+
+```bash
+git clone https://github.com/CAZALAC/ADA.git
+```
+
+## Option A (Recommended)
+Create a new project in RStudio.
+
+In the RStudio console, execute the following command to restore the required packages:
+
+```bash
+renv::restore()
+```
+
+Open app.R and Run the application using the Run App function.
