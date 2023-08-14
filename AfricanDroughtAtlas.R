@@ -15,13 +15,13 @@
 ##################################################
 
 # Libraries ----------------------
-library(raster);library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
+library(countrycode);library(rts);require(ncdf4);library(HelpersMG)
 library(plyr);library(latticeExtra);library(reshape2);library(gdata);library(corrplot);library(sqldf)
 library(zoo);library(Kendall);library(zyp);library(car);library(gtools);
-library(rgeos);library(lmom);library(lmomRFA);library(sp);library(rrcov);library(nsRFA);library(ModelMap)
+library(lmom);library(lmomRFA);library(rrcov);library(nsRFA);library(ModelMap)
 library(stringr);library(rasterVis);library(hydroGOF);library(randomForest);library(progress);
 library(gtools);library(here);library(chron);library(lattice);library(RColorBrewer);
-library(sf);library(circular);library(reshape);library(deldir)
+library(sf);library(circular);library(reshape);library(deldir);library(raster)
 
 # Config ----------------------
 #Option 1: Replace with the corresponding three ISO letters. In this case, Botswana should be 

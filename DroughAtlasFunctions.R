@@ -375,7 +375,7 @@ shape_country <- function(country){
     #gadm(country=country, level=1, path=tempdir())
   }else{
     shape=paste0("Shape/",country,".shp",sep="")
-    BoundariesAFR <- raster::shapefile(shape)
+    BoundariesAFR <- terra::vect(shape)
     #el script funciona con lonlat
     try(BoundariesAFR <- spTransform(BoundariesAFR, "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"), silent = TRUE)
     #por si el archivo viene sin prj
@@ -1126,7 +1126,12 @@ regionalization <- function (BaseDatosEstaciones, BaseRegistrosPr, VarInter="Cum
   H1_critical=Hc*Hf
   spBEPr_adapt=BaseDatosEstaciones
   coordinates(spBEPr_adapt) <- ~lon+lat
-  d_adapt <- gDistance(spBEPr_adapt, byid=T)
+  #deprecated 13-08-2023
+  #d_adapt <- rgeos::gDistance(spBEPr_adapt, byid=T)
+  spBEPr_adapt_sf <- st_as_sf(spBEPr_adapt)
+  d_adapt <- st_distance(spBEPr_adapt_sf, spBEPr_adapt_sf)
+  
+  
   row.names(d_adapt)=as.character(BaseDatosEstaciones$id_station)
   colnames(d_adapt)=as.character(BaseDatosEstaciones$id_station)
   
