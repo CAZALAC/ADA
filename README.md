@@ -25,13 +25,20 @@ Drag and drop the downloaded folder into the root script directory, or manually 
 ## Option A (Recommended)
 Create a new project in RStudio.
 
-In the RStudio console, execute the following command to restore the required packages:
+In the RStudio console, execute the following command to restore the necessary packages:
+
+
+```r
+renv::restore()
+```
+
+Open `app.R` and Run the application using the `Run App` function.
+
+Note: If you encounter any errors, you can try the following:
 
 ```r
 renv::install()
 ```
-
-Open app.R and Run the application using the `Run App` function.
 
 ## Option B 
 
