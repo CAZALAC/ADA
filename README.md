@@ -7,13 +7,21 @@ We welcome contributions from researchers, meteorologists, hydrologists, and any
 
 # Instructions to Set Up the ADA Project
 
+
 ## Clone the Repository
+
 First, clone the repository to your local machine using the following Git command:
 
 ```bash
 git clone https://github.com/CAZALAC/ADA.git
 ```
-## Download the Folder "ADAFolderPredictors"
+
+These are the two available options to configure and run the ADA project. Choose the one that suits your needs best and enjoy working on the project!
+
+## Option A (Recommended)
+
+
+### Download the Folder "ADAFolderPredictors"
 
 Download the provided folder using the following link:
 
@@ -21,8 +29,6 @@ https://drive.google.com/drive/folders/1138qEcC7yOGRirtGFBT4WctSN1ef1mg9?usp=dri
 
 Drag and drop the downloaded folder into the root script directory, or manually copy and paste it.
 
-
-## Option A (Recommended)
 Create a new project in RStudio.
 
 In the RStudio console, execute the following command to restore the necessary packages:
@@ -46,12 +52,16 @@ If you prefer to use Docker:
 
 1. Ensure that Docker is installed on your system.
 
-2. Execute the following command to set up the environment using Docker Compose:
+2. Execute the following command within the root script directory to establish the environment using Docker Compose:
 
 ```bash
 docker-compose up
 ```
 
-These are the two available options to configure and run the ADA project. Choose the one that suits your needs best and enjoy working on the project!
+In Windows, the shared folder should be located at: 
+
+```bash
+\wsl$\docker-desktop-data\data\docker\volumes
+```
 
 If you have any further questions or need more assistance, please don't hesitate to ask!
