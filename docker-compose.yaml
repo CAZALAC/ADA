@@ -5,8 +5,10 @@ services:
     ada:
         build: .
         ports:
-            - 8787:8787
-        enviroment:
+            - '8787:8787'
+        environment:
             PASSWORD: "cazalac2023p"
         volumes:
             - ctemporal:/home/rstudio/ADA
+volumes:   # add this section
+  ctemporal:    # does not need anything underneath this

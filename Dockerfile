@@ -3,7 +3,7 @@ FROM rocker/rstudio:4.3
 RUN sudo apt-get update && apt-get -y install --no-install-recommends \ 
 g++ sqlite3 libsqlite3-dev libtiff5-dev curl pkg-config libjbig-dev proj-bin  gdal-bin \
 libtiff5-dev libgdal-dev libproj-dev libexpat1-dev wx-common unixodbc-dev cmake \
-saga libudunits2-dev 
+libudunits2-dev 
 #creating a working directory
 RUN mkdir /home/rstudio/ADA
 #coping all needed files

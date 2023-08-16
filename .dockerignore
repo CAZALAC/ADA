@@ -1,7 +1,5 @@
 *.rds
 .rds
-.nc
-*.nc
 .Rproj.user
 .Rdata
 .RHistory
