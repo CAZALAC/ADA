@@ -8,6 +8,7 @@ library(sf);library(circular);library(reshape);library(deldir);library(shinyaler
 library(shinythemes);library(raster)
 
 
+
 workdir <- here()
 setwd(workdir)
 
@@ -280,7 +281,7 @@ server <- function(input, output) {
       
       
       
-      map <- raster::shapefile(paste(tempdirname,
+      map <- sf::read_sf(paste(tempdirname,
                                      shpdf$name[grep(pattern = "*.shp$", shpdf$name)],
                                      sep = "/"))
       try(map <- spTransform(map, "+proj=longlat +datum=WGS84"), silent = TRUE)

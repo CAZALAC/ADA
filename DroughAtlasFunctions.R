@@ -379,10 +379,10 @@ shape_country <- function(country){
     #el script funciona con lonlat
     try(BoundariesAFR <- spTransform(BoundariesAFR, "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"), silent = TRUE)
     #por si el archivo viene sin prj
-    try(raster::projection(BoundariesAFR) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
+    try(raster::projection(BoundariesAFR) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0", silent = TRUE)
     Boundaries <- BoundariesAFR
   }
-  Bound.Pol = extent(Boundaries)
+  Bound.Pol = terra::ext(Boundaries)
   if(Bound.Pol[1]>0) xmin=Bound.Pol[1]*0.9 else xmin=Bound.Pol[1]*1.1
   if(Bound.Pol[2]>0) xmax=Bound.Pol[2]*1.1 else xmax=Bound.Pol[2]*0.9
   if(Bound.Pol[3]>0) ymin=Bound.Pol[3]*0.9 else ymin=Bound.Pol[3]*1.1
@@ -420,7 +420,7 @@ randomSample = function(df,n) {
 database_creation <- function(model = "CRU", country = "BWA",  maxstations=10000, resol="25") {
   clip_method="Shape"
   # BLOCK I.A. DATABASE CONSTRUCTION FROM CRU 3.21 ------------
-  # debug: model = "CRU"; country = "BWA"; clip_method="Rectangle"
+  # debug: model = "CHIRPS"; country = "reg_nac_wgs84"; clip_method="Rectangle"
   if(model=="CRU"){
     # Optional Config Setup, Country Code, Shape and raster creation =================
     workdir <- here()
@@ -592,12 +592,14 @@ database_creation <- function(model = "CRU", country = "BWA",  maxstations=10000
     #Create working directory and set working directory
     dir.create(paste0("./",country,sep=""))
     setwd(paste0("./",country,sep=""))
-    
+    if(Boundaries@class == "SpatVector"){
+      terra::writeVector(Boundaries, paste(country,".shp",sep=""), overwrite=TRUE)
+    }else{
     shapefile(Boundaries, filename=country, overwrite=TRUE)
-
+    }
     #Boundaries=readOGR(".",country)   #Obtenido de http://www.maplibrary.org/library/stacks/Africa/index.htm
     plot(Boundaries)
-    Bound.Pol=extent(Boundaries)
+    Bound.Pol=terra::ext(Boundaries)
     if(Bound.Pol[1]>0) xmin=Bound.Pol[1]*0.95 else xmin=Bound.Pol[1]*1.05
     if(Bound.Pol[2]>0) xmax=Bound.Pol[2]*1.05 else xmax=Bound.Pol[2]*0.95
     if(Bound.Pol[3]>0) ymin=Bound.Pol[3]*0.95 else ymin=Bound.Pol[3]*1.05
@@ -819,7 +821,7 @@ database_creation <- function(model = "CRU", country = "BWA",  maxstations=10000
 
 
 step2_variable_calculation <- function(country = country){
-  #country="BWA"
+  #country="CHILE"
   #setwd(workdir)
   setwd(paste0("./", country)) #changed slashes
   #getwd()  
@@ -1221,7 +1223,7 @@ regionalization <- function (BaseDatosEstaciones, BaseRegistrosPr, VarInter="Cum
 
 regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, BaseDatosEstacionesClust, BaseRegistrosPr, z, Hc, country ){
   # E.1. Create homogeneous regions
-  #ClustLevels <- output_3$ClustLevels ; NombreClusters <- output_3$NombreClusters; VarInter <- output_3$VarInter; BaseDatosEstacionesClust <- output_3$BaseDatosEstacionesClust ; BaseRegistrosPr <- output_2$BaseRegistrosPr; z <- output_2$z; Hc <-output_3$Hc ; country = "TUN"
+  #ClustLevels <- output_3$ClustLevels ; NombreClusters <- output_3$NombreClusters; VarInter <- output_3$VarInter; BaseDatosEstacionesClust <- output_3$BaseDatosEstacionesClust ; BaseRegistrosPr <- output_2$BaseRegistrosPr; z <- output_2$z; Hc <-output_3$Hc ; country = "CHILE"
 
   #Incluir linea con ifelse que evalue la dimension de NombresCluster y asigne MaxClusters
   #VarInter="CumSumDec"
@@ -1259,10 +1261,10 @@ regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, B
       Region_dat<-Region[,2]
       Region_fac<-factor(Region[,1])
       Reg<-split(Region_dat,Region_fac)# Con esto separo los registros segun la estacion
-      Reg<-lapply(Reg, function(x) if (sum(x==0)>length(x)-4) {x[1:4]=rand.GEV(4, 0.58,0.29,-0.46);x} else {x})
-      ProporCeros[[l]]=lapply(Reg, function(x) {sum(x==0)/(length(x)+1)})
-      p0bias[[l]]=lapply(Reg, function(x) {(sum(x==0)+1)/(2*(length(x)+1))})
-      MediaCompleta[[l]]=lapply(Reg, mean)
+      Reg<-lapply(Reg, function(x) if (sum(x==0, na.rm=TRUE)>length(x)-4) {x[1:4]=rand.GEV(4, 0.58,0.29,-0.46);x} else {x})
+      ProporCeros[[l]]=lapply(Reg, function(x) {sum(x==0, na.rm=TRUE)/(length(x)+1)})
+      p0bias[[l]]=lapply(Reg, function(x) {(sum(x==0, na.rm=TRUE)+1)/(2*(length(x)+1))})
+      MediaCompleta[[l]]=lapply(Reg, mean, na.rm=TRUE)
       RegsinCero=lapply(Reg, function(x) {x[x!=0]})
       BaseRegiones[[l]]=RegsinCero
       

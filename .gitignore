@@ -6,8 +6,13 @@
 .Rdata
 .RHistory
 Huasco/
+CHILE/
+CHILE_backup_original/
+reg_nac_wgs84/
 Shape/sub*
 Shape/Huas*
+Shape/Regional.*
+Shape/reg_nac_wgs84.*
 DZA/
 AGO/
 SHN/

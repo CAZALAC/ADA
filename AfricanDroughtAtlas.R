@@ -28,7 +28,7 @@ library(sf);library(circular);library(reshape);library(deldir);library(raster)
 #replaced with 'BWA'.
 #Option 2: The file name of the shape without the extension, located in the 'shape' folder. 
 #For example, if the file is named 'file.shape', the input should be 'file'.
-country="BWA"
+country="CHILE"
 
 
 #  Optinal Config =======================
@@ -47,9 +47,10 @@ source('DroughAtlasFunctions.R')
 # Option 2: "CHIRPS" from http://iridl.ldeo.columbia.edu resolution 0.25'
 # Resol: only for CHIRPS, can be 25 for 0.25 degrees or 05 for 0.05 degrees which corresponds to the pixel size, it is recommended to use 05 only in small areas.
 
-database_creation(model="CRU", country = country, resol="25", maxstations=1000 )
+database_creation(model="CHIRPS", country = country, resol="25", maxstations=1000 )
 
 # II. VARIABLES AND INDICES  CALCULATION --------------
+#output_2 <- step2_variable_calculation(country = country)
 
 output_2 <- step2_variable_calculation(country = country)
 
