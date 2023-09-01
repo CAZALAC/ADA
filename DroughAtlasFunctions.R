@@ -1668,6 +1668,7 @@ period_mapping <- function(ResumeTable, BaseModelMapCor, country, Boundaries){
                                     grep('ClustReg_adapt',names(BaseModelMapMask)),#Adicionado para mapeo de clusters
                                     grep(paste0('Dist',"$",collapse="|"),names(BaseModelMapMask)),#Adicionado para mapeo de clusters
                                     grep('EstFreq',names(BaseModelMapMask)),
+                                    grep('^MediaConCero',names(BaseModelMapMask)),
                                     grep('^RP',names(BaseModelMapMask)),
                                     grep('EstQuant',names(BaseModelMapMask)))]
   coordinates(BaseMPMaskPlot)= c("lon","lat")
@@ -1774,6 +1775,8 @@ if(st_bbox(pol1)$ymax < 0){
   MapVarRetPeriod=names(BaseModelMapCor)[grep('^RP',names(BaseModelMapCor))]
   MapVarEstQuant=names(BaseModelMapCor)[grep('^^EstQuant',names(BaseModelMapCor))]
   MapVarBalance=names(BaseModelMapCor)[grep('^^Balance',names(BaseModelMapCor))]
+  #mapa con la media 30-08-2023
+  MapVarMedia=names(BaseModelMapCor)[grep('^MediaConCero',names(BaseModelMapCor))]
   
   # ..................................Quantile maps (precipitation maps) for a given return period
   folder.mapas="/Mapas"
@@ -1919,7 +1922,7 @@ if(st_bbox(pol1)$ymax < 0){
   ValidGOFDBRP=list()
   VarImpDBRP=list()
   folder <- getwd()
-  
+
   #Modelling and mapping of Return Periods
   #.......Save calibration, validation and variable importance plots to a PDF
   pdf(paste0("ReturnPeriods_",country,"_.pdf"), width = 16 , height = 10)
@@ -2024,6 +2027,9 @@ exploratory <- function(BaseDatosEstacionesClust, country, VarInter="CumSumDec")
   #revisar si se debe dejar como opción
   #se deja en primera region, ya que la region 3 a veces genera errores
   for (regoi in unique(BaseDatosEstacionesClust$ClustReg_adapt) ){
+    if(is.na(regoi)){
+      next      
+    }
   #region.of.interest=unique(BaseDatosEstacionesClust$ClustReg_adapt)[1] #Some of the available regions in ClustReg_adapt or a number between 1 and ClustLevels
   region.of.interest  <- regoi
   #VarInter<-"CumSumDec"
