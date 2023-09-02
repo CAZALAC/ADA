@@ -52,10 +52,10 @@ If you prefer to use Docker:
 
 1. Ensure that Docker is installed on your system.
 
-2. Execute the following command within the root script directory to establish the environment using Docker Compose:
+2. Execute the following command:
 
 ```bash
-docker-compose up
+docker pull pabrojast/ada:0.2
 ```
 
 In Windows, the shared folder should be located at: 
@@ -64,4 +64,13 @@ In Windows, the shared folder should be located at:
 \wsl$\docker-desktop-data\data\docker\volumes
 ```
 
-If you have any further questions or need more assistance, please don't hesitate to ask!
+
+Note: (OPTIONAL) If you want to build your own image, run the following command in the script root:
+
+ 
+```bash
+docker-compose up
+```
+
+If you have any further questions or need more assistance, please don't hesitate to ask! 
+
