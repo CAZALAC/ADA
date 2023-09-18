@@ -37,7 +37,7 @@ renv::restore()
 
 Open `app.R` and Run the application using the `Run App` function.
 
-Note: If you encounter any errors, you can try the following:
+Note: If you encounter any errors, during the installation, you can try the following:
 
 ```r
 renv::install()
