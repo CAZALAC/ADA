@@ -27,9 +27,8 @@ https://drive.google.com/drive/folders/1138qEcC7yOGRirtGFBT4WctSN1ef1mg9?usp=dri
 
 Drag and drop the downloaded folder into the root script directory, or manually copy and paste it.
 
-Create a new project in RStudio.
-
-In the RStudio console, execute the following command to restore the necessary packages:
+### Create a new project in RStudio.
+Create a new project in RStudio and, in the RStudio console, execute the following command to restore the necessary packages:
 
 
 ```r
