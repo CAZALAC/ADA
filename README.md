@@ -56,16 +56,9 @@ If you prefer to use Docker:
 docker pull pabrojast/ada:0.2
 ```
 
-In Windows, the shared folder should be located at: 
-
-```bash
-\wsl$\docker-desktop-data\data\docker\volumes
-```
-
 
 Note: (OPTIONAL) If you want to build your own image, run the following command in the script root:
 
- 
 ```bash
 docker-compose up
 ```
