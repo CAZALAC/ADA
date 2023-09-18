@@ -7,6 +7,9 @@ We welcome contributions from researchers, meteorologists, hydrologists, and any
 
 # Instructions to Set Up the ADA Project
 
+These are the two available options to configure and run the ADA project. Choose the one that suits your needs best and enjoy working on the project!
+
+## Option A (Recommended - Rstudio).
 
 ## Clone the Repository
 
@@ -15,11 +18,6 @@ First, clone the repository to your local machine using the following Git comman
 ```bash
 git clone https://github.com/CAZALAC/ADA.git
 ```
-
-These are the two available options to configure and run the ADA project. Choose the one that suits your needs best and enjoy working on the project!
-
-## Option A (Recommended)
-
 
 ### Download the Folder "ADAFolderPredictors"
 
@@ -46,7 +44,7 @@ Note: If you encounter any errors, you can try the following:
 renv::install()
 ```
 
-## Option B 
+## Option B (Docker - Rstudio-Server)
 
 If you prefer to use Docker:
 
