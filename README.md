@@ -23,7 +23,7 @@ git clone https://github.com/CAZALAC/ADA.git
 
 Download the provided folder using the following link:
 
-https://drive.google.com/drive/folders/1138qEcC7yOGRirtGFBT4WctSN1ef1mg9?usp=drive_link
+https://drive.google.com/file/d/1RxeVBNK-124miXxGpIjZDIWvZJWvP_hT/view?usp=sharing
 
 Drag and drop the downloaded folder into the root script directory, or manually copy and paste it. The file cru_ts3.24.01.1901.2015.pre.dat should be left in the root of the script.
 
