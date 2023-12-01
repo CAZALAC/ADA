@@ -67,31 +67,57 @@ If you have any further questions or need more assistance, please don't hesitate
 ## Script Output
 
 Id_station: ID code for the Location Point
+
 lon: Longitude
+
 lat: Latitude
+
 ClustReg_a: Homogeneous Region of the L.P.
+
 Criteria: Stopping criteria used when region was created
+
 n: Record length
+
 mean: Average precipitation for the cumulative period
+
 L_CV: L-CV
+
 L_Skewness: L-Skewness
+
 L_Kurtosis: L-Kurtosis
+
 T5: The L-moment t5
+
 mediaSinCero: Average precipitation for the cumulative period excluding zero values
+
 mediaConCero: Average precipitation for the cumulative period including zero values
+
 propCero: Proportion of zeros values in the Location Point record for the cumulative period in analysis
+
 biasCero: The zero bias index
+
 Dist: The selected distribution model for the region and cumulative period in analysis
+
 acumulado: Accumulated precipitation for the given cumulative period
+
 qsincero: Quantile corresponding to the accumulated precipitation for the given cumulative period excluding zero values
+
 qConCero: Quantile corresponding to the accumulated precipitation for the given cumulative period including zero values
+
 desvioSinCero: Cumulative precipitation departure excluding zero values
+
 desvioConCero: Cumulative precipitation departure including zero values
+
 EstFreq: Estimated frequency
+
 Px: Probability of the mixed distribution accounting for the proportion of zero values (Px= propCero+(1- propCero)* EstFreq
+
 RP: Return Period
+
 RPI: Return Period Index
+
 Z: normal quantile for the given EstFreq
+
 out.class: The result of spatial outlier test. Included Location Points must have a value=0
 
 
