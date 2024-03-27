@@ -376,6 +376,8 @@ shape_country <- function(country){
   }else{
     shape=paste0("Shape/",country,".shp",sep="")
     BoundariesAFR <- sf::st_as_sf(terra::vect(shape))
+    #legacy
+    BoundariesAFR <- as(BoundariesAFR, "Spatial")
     #el script funciona con lonlat
     try(BoundariesAFR <- spTransform(BoundariesAFR, "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"), silent = TRUE)
     #por si el archivo viene sin prj
