@@ -7,6 +7,9 @@ We welcome contributions from researchers, meteorologists, hydrologists, and any
 
 # Instructions to Set Up the ADA Project
 
+These are the two available options to configure and run the ADA project. Choose the one that suits your needs best and enjoy working on the project!
+
+## Option A (Recommended - Rstudio).
 
 ## Clone the Repository
 
@@ -16,22 +19,16 @@ First, clone the repository to your local machine using the following Git comman
 git clone https://github.com/CAZALAC/ADA.git
 ```
 
-These are the two available options to configure and run the ADA project. Choose the one that suits your needs best and enjoy working on the project!
-
-## Option A (Recommended)
-
-
 ### Download the Folder "ADAFolderPredictors"
 
 Download the provided folder using the following link:
 
-https://drive.google.com/drive/folders/1138qEcC7yOGRirtGFBT4WctSN1ef1mg9?usp=drive_link
+https://drive.google.com/file/d/1RxeVBNK-124miXxGpIjZDIWvZJWvP_hT/view?usp=sharing
 
-Drag and drop the downloaded folder into the root script directory, or manually copy and paste it.
+Drag and drop the downloaded folder into the root script directory, or manually copy and paste it. The file cru_ts3.24.01.1901.2015.pre.dat should be left in the root of the script.
 
-Create a new project in RStudio.
-
-In the RStudio console, execute the following command to restore the necessary packages:
+### Create a new project in RStudio.
+Create a new project in RStudio and, in the RStudio console, execute the following command to restore the necessary packages:
 
 
 ```r
@@ -40,13 +37,13 @@ renv::restore()
 
 Open `app.R` and Run the application using the `Run App` function.
 
-Note: If you encounter any errors, you can try the following:
+Note: If you encounter any errors, during the installation, you can try the following:
 
 ```r
 renv::install()
 ```
 
-## Option B 
+## Option B (Docker - Rstudio-Server)
 
 If you prefer to use Docker:
 
@@ -58,19 +55,69 @@ If you prefer to use Docker:
 docker pull pabrojast/ada:0.2
 ```
 
-In Windows, the shared folder should be located at: 
-
-```bash
-\wsl$\docker-desktop-data\data\docker\volumes
-```
-
 
 Note: (OPTIONAL) If you want to build your own image, run the following command in the script root:
 
- 
 ```bash
 docker-compose up
 ```
 
 If you have any further questions or need more assistance, please don't hesitate to ask! 
+
+## Script Output
+
+Id_station: ID code for the Location Point
+
+lon: Longitude
+
+lat: Latitude
+
+ClustReg_a: Homogeneous Region of the L.P.
+
+Criteria: Stopping criteria used when region was created
+
+n: Record length
+
+mean: Average precipitation for the cumulative period
+
+L_CV: L-CV
+
+L_Skewness: L-Skewness
+
+L_Kurtosis: L-Kurtosis
+
+T5: The L-moment t5
+
+mediaSinCero: Average precipitation for the cumulative period excluding zero values
+
+mediaConCero: Average precipitation for the cumulative period including zero values
+
+propCero: Proportion of zeros values in the Location Point record for the cumulative period in analysis
+
+biasCero: The zero bias index
+
+Dist: The selected distribution model for the region and cumulative period in analysis
+
+acumulado: Accumulated precipitation for the given cumulative period
+
+qsincero: Quantile corresponding to the accumulated precipitation for the given cumulative period excluding zero values
+
+qConCero: Quantile corresponding to the accumulated precipitation for the given cumulative period including zero values
+
+desvioSinCero: Cumulative precipitation departure excluding zero values
+
+desvioConCero: Cumulative precipitation departure including zero values
+
+EstFreq: Estimated frequency
+
+Px: Probability of the mixed distribution accounting for the proportion of zero values (Px= propCero+(1- propCero)* EstFreq
+
+RP: Return Period
+
+RPI: Return Period Index
+
+Z: normal quantile for the given EstFreq
+
+out.class: The result of spatial outlier test. Included Location Points must have a value=0
+
 
