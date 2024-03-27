@@ -375,7 +375,7 @@ shape_country <- function(country){
     #gadm(country=country, level=1, path=tempdir())
   }else{
     shape=paste0("Shape/",country,".shp",sep="")
-    BoundariesAFR <- terra::vect(shape)
+    BoundariesAFR <- sf::st_as_sf(terra::vect(shape))
     #el script funciona con lonlat
     try(BoundariesAFR <- spTransform(BoundariesAFR, "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"), silent = TRUE)
     #por si el archivo viene sin prj
