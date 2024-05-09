@@ -1464,10 +1464,13 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
   #.................................................................................................................
   
   # Frecuency and quantile values of interest
-  CuantilInteres<-c( 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-  ProbInteres=c(1/100,1/90,1/80,1/70,1/60,1/50,1/40,1/30,1/20,1/10,1/5,1/2)
+  CuantilInteres<-c( 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7)
+  ProbInteres=c(1/100,1/90,1/80,1/70,1/60,1/50,1/40,1/30,1/20,1/10,1/5,1/2,
+                1-1/100,1-1/90,1-1/80,1-1/70,1-1/60,1-1/50,1-1/40,1-1/30,1-1/20,1-1/10,1-1/5,1-1/2)
   nameProbInteres=c("1_in_100yr","1_in_90yr","1_in_80yr","1_in_70yr","1_in_60yr","1_in_50yr","1_in_40yr","1_in_30yr",
-                    "1_in_20yr","1_in_10yr","1_in_5yr","1_in_2yr")
+                    "1_in_20yr","1_in_10yr","1_in_5yr","1_in_2yr",
+                    "100yr","90yr","80yr","70yr","60yr","50yr","40yr","30yr",
+                    "20yr","10yr","5yr","2yr")
   
   SClst=base::which.max(ResumeTable$AE)
   
@@ -1517,8 +1520,7 @@ period_estimation <- function(BaseSummaryStatistics, BaseDatosEstacionesClust, B
       FrequencyEstimation$Px=ifelse(CuantilInteres[j]>0,
                                     FrequencyEstimation$propCero+(1-FrequencyEstimation$propCero)*FrequencyEstimation$EstFreq,
                                     FrequencyEstimation$biasCero)
-      #borrar
-      #FrequencyEstimation$Px <- FrequencyEstimation$EstFreq
+
       
       #original
       FrequencyEstimation$PR=ifelse (FrequencyEstimation$Px>0.5,
