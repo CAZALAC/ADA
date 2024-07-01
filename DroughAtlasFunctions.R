@@ -149,6 +149,7 @@ Lmoments <- function(x) {
 #Function 2. Function to compute ARF-LM statistics as in rgtest from lmomRFA
 H1ZDi=function (y,Nsim) 
 {
+  #y <- BaseReg_adapt; Nsim=2000
   #library(homtest) disabled so it can run. Lmoments function is enabled manually
   #if (length(x) != length(cod)) {
   #  stop("x and cod must have the same length")
@@ -175,8 +176,18 @@ H1ZDi=function (y,Nsim)
   bestdist=ifelse(tau4Reg<0.16667*tau3Reg^0+0.83333*tau3Reg^2,"kap","glo")
   #parkappa <- pelkap(c(lambda1Reg, lambda2Reg, tau3Reg, tau4Reg)) Cambiado por lo de abajo para enfrentar kappa
   if(bestdist=="kap"){
-    pardist=pelkap(c(lambda1Reg, lambda2Reg, tau3Reg, tau4Reg))} else{
-      pardist=pelglo(c(lambda1Reg, lambda2Reg, tau3Reg, tau4Reg))}
+    
+    pardist= try(pelkap(c(lambda1Reg, lambda2Reg, tau3Reg, tau4Reg)), silent = TRUE)
+    #en caso de que falle, prueba con glo
+    if (inherits(pardist, "try-error")) {
+      pardist=pelglo(c(lambda1Reg, lambda2Reg, tau3Reg, tau4Reg))
+      bestdist <- "glo"
+      }
+  } else {
+      pardist=pelglo(c(lambda1Reg, lambda2Reg, tau3Reg, tau4Reg))
+      bestdist <- "glo"
+      
+  }
   
   #xi <- parkappa[1]#parkappa$xi
   #alfa <- parkappa[2]#parkappa$alfa
@@ -1030,7 +1041,10 @@ step2_variable_calculation <- function(country = country){
   
   #....................................................................................
   for (est in 1:estaciones){
-    
+    #si toda una region es 0, entonces hace un fix para que y no sea empty
+    if(all(RegTotalS[[est]]$CumSumDec == 0)){
+      RegTotalS[[est]]$CumSumDec = runif(n = nrow(RegTotalS[[est]]), min = 0.01, max = 0.1)
+    }
     Y<- RegTotalS[[est]]$CumSumDec/mean(RegTotalS[[est]]$CumSumDec,na.rm=T)
     X<- RegTotalS[[est]]$Year
     XY<-cbind(X,Y)
@@ -1042,8 +1056,14 @@ step2_variable_calculation <- function(country = country){
     gz <- zoo( x = NULL ,seq(min(time(z)), max(time(z))))
     XYzoo<-merge(gz,z)
     XYdf<-data.frame(X=index(XYzoo),Y=XYzoo,row.names=NULL)
-    
-    mk<-as.numeric(MannKendall(as.ts(XYzoo)))[2]# Paquete Kendall
+    # Crear variable para almacenar el resultado
+    mk <- NA  # Inicializamos con NA o algún valor por defecto
+    if(length(unique(XYzoo)) == 1) {
+      cat("Todos los valores en la serie temporal son iguales. La prueba de Mann-Kendall no se puede realizar.\n")
+    } else {
+      # Realizar la prueba de Mann-Kendall
+      mk<-as.numeric(MannKendall(as.ts(XYzoo)))[2]# Paquete Kendall
+    }
     ss<-zyp.sen(Y~X,data=XYdf)[[1]][2] # Paquete zyp
     
     fit=lm(Y~X,data=XYdf)
@@ -1156,7 +1176,11 @@ regionalization <- function (BaseDatosEstaciones, BaseRegistrosPr, VarInter="Cum
       crit=4# Predeterminado. La region se cierra cuando se alcanza el maximo.
       REG_adapt[[i]]=row.names(d_adapt)[order(d_adapt[1,],decreasing=F)[i]]
       Region_adapt<-sqldf(paste("select id_station,",VarInter," from BaseCompletaAdapt where id_station=='",REG_adapt[[i]],"'",sep=""))
+      if(all(Region_adapt[VarInter] == 0)){
+        Region_adapt[VarInter] = runif(n = nrow(Region_adapt[VarInter]), min = 0.01, max = 0.1)
+      }
       Region_adapt_dat<-Region_adapt[VarInter][,]
+
       Region_adapt_fac<-factor(Region_adapt["id_station"][,])
       Reg_adapt<-split(Region_adapt_dat,Region_adapt_fac)# Con esto separo los registros segun la estacion
       Reg_adapt=lapply(Reg_adapt, function(x) {x[x!=0]})#Agregado para analizar solo sin ceros
@@ -1201,7 +1225,7 @@ regionalization <- function (BaseDatosEstaciones, BaseRegistrosPr, VarInter="Cum
   RegStations$id_station=as.factor(RegStations$id_station)
   RegStations$ClustReg_adapt=as.integer(RegStations$ClustReg_adapt)
   pie(table(RegStations$Criteria))
-  
+  BaseDatosEstaciones$id_station = as.factor(BaseDatosEstaciones$id_station) 
   BaseDatosEstacionesClust=join(BaseDatosEstaciones,RegStations,by="id_station")
   write.csv(BaseDatosEstacionesClust,"BaseDatosEstacionesClust.csv",row.names=FALSE)
   #rm(BaseDatosEstacionesClust)
@@ -1225,7 +1249,7 @@ regionalization <- function (BaseDatosEstaciones, BaseRegistrosPr, VarInter="Cum
 
 regional_frequency_analysis <- function(ClustLevels, NombreClusters, VarInter, BaseDatosEstacionesClust, BaseRegistrosPr, z, Hc, country ){
   # E.1. Create homogeneous regions
-  #ClustLevels <- output_3$ClustLevels ; NombreClusters <- output_3$NombreClusters; VarInter <- output_3$VarInter; BaseDatosEstacionesClust <- output_3$BaseDatosEstacionesClust ; BaseRegistrosPr <- output_2$BaseRegistrosPr; z <- output_2$z; Hc <-output_3$Hc ; country = "CHILE"
+  #ClustLevels <- output_3$ClustLevels ; NombreClusters <- output_3$NombreClusters; VarInter <- output_3$VarInter; BaseDatosEstacionesClust <- output_3$BaseDatosEstacionesClust ; BaseRegistrosPr <- output_2$BaseRegistrosPr; z <- output_2$z; Hc <-output_3$Hc ; country = "ref_pr_monthly"
 
   #Incluir linea con ifelse que evalue la dimension de NombresCluster y asigne MaxClusters
   #VarInter="CumSumDec"
@@ -1877,7 +1901,12 @@ if(st_bbox(pol1)$ymax < 0){
     f <- paste(names(RFModelcalib)[1], "~", paste(names(RFModelcalib)[-1], collapse=" + "))
     mcal<-randomForest(as.formula(f),data=RFModelcalib,mtry=10,ntree=1000)
     calib=data.frame(Obs=RFModelcalib[1],Simul=predict(mcal))
+    
     names(calib)=c("Obs","Simul")
+    if(all(calib$Obs == 0)){
+      calib$Obs = runif(n = nrow(calib), min = 0.001, max = 0.01) 
+    }
+    
     write.csv(calib,file=paste0(folder,"/calibrationTablefor",Predictant,".csv"),row.names=F)
     partylmcalib=lm(Simul~Obs,data=calib)
     summary(partylmcalib)
@@ -1893,9 +1922,16 @@ if(st_bbox(pol1)$ymax < 0){
     RFModelvalid=read.csv(paste0(folder,"/",Predictant,"_BaseModelMapCor_TEST.csv"))
     RFModelvalid=RFModelvalid[,c(Predictant,Predictor)]
     valid=data.frame(Obs=RFModelvalid[1],Simul=predict(mcal,newdata=RFModelvalid[,-1]))
+    if(all(valid$Obs == 0)){
+      valid$Obs = runif(n = nrow(valid), min = 0.001, max = 0.01) 
+    }
     names(valid)=c("Obs","Simul")
+    if(all(valid$Obs == 0)){
+      valid$Obs = runif(n = nrow(valid), min = 0.001, max = 0.01) 
+    }
     write.csv(valid,file=paste0(folder,"/ValidationTablefor",Predictant,".csv"),row.names=F)
     partylmvalid=lm(Simul~Obs,data=valid)
+    
     summary(partylmvalid)
     plot(valid[,1],valid[,2],xlab="Observed",ylab="Simulated",col="gray",pch=19,main=paste0("Validation for ",Predictant))  
     abline(partylmvalid,col="black")  
@@ -1987,6 +2023,9 @@ if(st_bbox(pol1)$ymax < 0){
     RFModelvalidRP=read.csv("BaseModelMapCor_TESTRP.csv")
     RFModelvalidRP=RFModelvalidRP[,c(Predictant,Predictor)]
     validRP=data.frame(Obs=RFModelvalidRP[1],Simul=predict(mcalRP,newdata=RFModelvalidRP[,-1]))
+    if(all(validRP$Obs == 0)){
+      validRP$Obs = runif(n = nrow(validRP), min = 0.001, max = 0.01) 
+    }
     names(validRP)=c("Obs","Simul")
     write.csv(validRP,file=paste0("ValidationRPTablefor",Predictant,".csv"),row.names=F)
     partylmvalidRP=lm(Simul~Obs,data=validRP)
